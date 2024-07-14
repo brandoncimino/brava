@@ -14,7 +14,6 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.RecordComponent;
 import java.util.Arrays;
-import java.util.Objects;
 import java.util.function.Function;
 
 /**
@@ -91,6 +90,24 @@ public final class Records {
               .collect(MoreCollectors.onlyElement());
     }
 
+    /**
+     * Determines if the given {@link RecordComponent} instances actually refer to the same {@link RecordComponent#getAccessor()}.
+     *
+     * <h1>Example</h1>
+     * <pre>{@code
+     * record Box(Object value) { }
+     *
+     * var a = Box.class.getRecordComponents()[0];
+     * var b = Box.class.getRecordComponents()[0];
+     *
+     * a.equals(b);             // => ❌ false
+     * areSameComponent(a, b);  // => ✅ true
+     * }</pre>
+     *
+     * @param a the first {@link RecordComponent}
+     * @param b the second {@link RecordComponent}
+     * @return {@code true} if they have the same {@link RecordComponent#getAccessor()}
+     */
     @Contract(pure = true, value = "null, null -> true; null, !null -> false; !null, null -> false")
     public static boolean areSameComponent(@Nullable RecordComponent a, @Nullable RecordComponent b) {
         return recordComponentEquivalence.equivalent(a, b);
@@ -102,11 +119,17 @@ public final class Records {
      * @param <R> the {@link Record} type
      * @param <T> the {@link RecordComponent#getType()}
      */
-    public static final class Comp<R extends @NotNull Record, T> implements Function<R, T> {
-        private final Function<R, T> getterMethod;
-        private final RecordComponent recordComponent;
+    public static final class Comp<R extends @NotNull Record, T> implements Function<@NotNull R, T> {
+        /**
+         * A {@link Function} that invokes the {@link RecordComponent#getAccessor()}.
+         */
+        private final @NotNull Function<R, T> getterMethod;
+        /**
+         * The underlying {@link RecordComponent}.
+         */
+        private final @NotNull RecordComponent recordComponent;
 
-        private Comp(GetterMethod<R, T> getterMethod) {
+        private Comp(@NotNull GetterMethod<R, T> getterMethod) {
             this.getterMethod = getterMethod;
             this.recordComponent = RecordGetterHelpers.getRecordComponent(getterMethod);
         }
@@ -117,11 +140,15 @@ public final class Records {
         }
 
         @Contract(pure = true)
-        @NotNull
-        public RecordComponent getRecordComponent() {
+        public @NotNull RecordComponent getRecordComponent() {
             return recordComponent;
         }
 
+        /**
+         * @param obj another {@link Comp}
+         * @return {@code true} if we {@link #areSameComponent(RecordComponent, RecordComponent)}
+         */
+        @Contract(pure = true, value = "null -> false")
         @Override
         public boolean equals(@Nullable Object obj) {
             if (obj instanceof Comp<?, ?> other) {
@@ -131,6 +158,10 @@ public final class Records {
             return false;
         }
 
+        /**
+         * @param other another {@link RecordComponent}
+         * @return {@code true} if we {@link #areSameComponent(RecordComponent, RecordComponent)}
+         */
         @Contract(pure = true, value = "null -> false")
         public boolean isSameComponentAs(@Nullable RecordComponent other) {
             return Records.areSameComponent(getRecordComponent(), other);
@@ -142,18 +173,7 @@ public final class Records {
         }
     }
 
-    static final Equivalence<RecordComponent> recordComponentEquivalence = new Equivalence<>() {
-        @Override
-        protected boolean doEquivalent(RecordComponent a, RecordComponent b) {
-            return a.getDeclaringRecord().equals(b.getDeclaringRecord()) &&
-                  a.getName().equals(b.getName());
-        }
-
-        @Override
-        protected int doHash(RecordComponent recordComponent) {
-            return Objects.hash(recordComponent.getName(), recordComponent.getDeclaringRecord());
-        }
-    };
+    static final Equivalence<RecordComponent> recordComponentEquivalence = Equivalence.equals().onResultOf(RecordComponent::getAccessor);
 
     /**
      * Used to capture <a href="https://docs.oracle.com/javase/tutorial/java/javaOO/methodreferences.html">method reference</a>s to {@link RecordComponent#getAccessor()}s.

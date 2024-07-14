@@ -66,7 +66,7 @@ class RecordsGetterTests {
               }
         );
     }
-    
+
     public static Stream<Records.GetterMethod<?, ?>> lambdaImplementations() {
         return Stream.of(
               new VinylArtistGetter(),
@@ -91,7 +91,8 @@ class RecordsGetterTests {
         var comp_2 = Vinyl.class.getRecordComponents()[0];
 
         Assertions.assertThat(comp_1)
-              .isNotSameAs(comp_2);
+              .isNotSameAs(comp_2)
+              .isNotEqualTo(comp_2);
 
         Assertions.assertThat(Records.areSameComponent(comp_1, comp_2))
               .isTrue();
