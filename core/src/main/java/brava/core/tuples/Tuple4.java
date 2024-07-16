@@ -6,8 +6,19 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Function;
 
+/**
+ * A {@link Tuple} with 4 elements.
+ *
+ * @param a   the first element
+ * @param b   the second element
+ * @param c   the third element
+ * @param d   the fourth element
+ * @param <A> the {@link #a()} type
+ * @param <B> the {@link #b()} type
+ * @param <C> the {@link #c()} type
+ * @param <D> the {@link #d()} type
+ */
 public record Tuple4<A, B, C, D>(A a, B b, C c, D d) implements Tuple<Tuple4<A, B, C, D>> {
-
     @Contract(pure = true)
     @Override
     public Object get(int index) {
@@ -26,8 +37,13 @@ public record Tuple4<A, B, C, D>(A a, B b, C c, D d) implements Tuple<Tuple4<A, 
         return 4;
     }
 
+    @Override
+    public @NotNull Tuple4<A, B, C, D> getSelf() {
+        return this;
+    }
+
     /**
-     * Adds a new element to the end of this tuple, making it a {@link Tuple4}.
+     * Adds a new element to the end of this tuple, making it a {@link Tuple5}.
      *
      * @param e   the new {@link Tuple5#e()}
      * @param <E> the type of {@link Tuple5#e()}
@@ -75,10 +91,5 @@ public record Tuple4<A, B, C, D>(A a, B b, C c, D d) implements Tuple<Tuple4<A, 
      */
     public <OUT> OUT reduce(@NotNull QuadFunction<A, B, C, D, OUT> function) {
         return function.apply(this);
-    }
-
-    @Override
-    public @NotNull Tuple4<A, B, C, D> getSelf() {
-        return this;
     }
 }
