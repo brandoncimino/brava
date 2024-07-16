@@ -1,4 +1,4 @@
-package brava.exceptions;
+package brava.core.exceptions;
 
 /**
  * Thrown by a branch of code that we didn't think was actually possible.

@@ -1,6 +1,4 @@
-package brava.exceptions;
-
-import java.io.UncheckedIOException;
+package brava.core.exceptions;
 
 /**
  * Wraps checked {@link ReflectiveOperationException}, similarly to {@link java.io.UncheckedIOException}. 

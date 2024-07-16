@@ -1,4 +1,4 @@
-package brava.exceptions;
+package brava.core.exceptions;
 
 /**
  * Indicates code that hasn't been written yet.

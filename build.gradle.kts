@@ -1,22 +1,3 @@
-plugins {
-    id("java")
-}
-
-group = "brava"
-version = "1.0-SNAPSHOT"
-
-repositories {
-    mavenCentral()
-}
-
-dependencies {
-    implementation("org.jetbrains:annotations:22.0.0")
-    implementation("com.google.guava:guava:32.0.1-jre")
-    testImplementation(platform("org.junit:junit-bom:5.10.0"))
-    testImplementation("org.junit.jupiter:junit-jupiter")
-    testImplementation("org.assertj:assertj-core:3.12.2")
-}
-
-tasks.test {
-    useJUnitPlatform()
-}
+// This is the "parent" build script.
+// I'm not sure what, if anything, would actually go in here, 
+// since stuff like dependency management goes in `settings.gradle.kts` instead.
