@@ -11,7 +11,7 @@ import java.util.*;
  *
  * @param <T> the element type
  */
-interface ListBase<T> extends CollectionBase<T>, List<T> {
+public interface ListBase<T> extends CollectionBase<T>, List<T> {
     @Override
     default boolean addAll(int index, @NotNull Collection<? extends T> c) {
         throw new UnsupportedOperationException();
