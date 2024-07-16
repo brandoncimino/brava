@@ -1,7 +1,7 @@
-package brava;
+package brava.core;
 
-import brava.exceptions.UncheckedReflectionException;
-import brava.exceptions.UnreachableException;
+import brava.core.exceptions.UncheckedReflectionException;
+import brava.core.exceptions.UnreachableException;
 import com.google.common.collect.MoreCollectors;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;

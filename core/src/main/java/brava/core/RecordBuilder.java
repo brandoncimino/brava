@@ -1,6 +1,6 @@
-package brava;
+package brava.core;
 
-import brava.exceptions.UncheckedReflectionException;
+import brava.core.exceptions.UncheckedReflectionException;
 import com.google.common.base.Equivalence;
 import com.google.common.base.Preconditions;
 import com.google.common.reflect.TypeToken;

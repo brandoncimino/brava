@@ -1,4 +1,4 @@
-package brava;
+package brava.core;
 
 import com.google.common.reflect.TypeToken;
 import org.assertj.core.api.Assertions;

@@ -1,6 +1,6 @@
-package brava;
+package brava.core;
 
-import brava.exceptions.UnreachableException;
+import brava.core.exceptions.UnreachableException;
 import com.google.common.base.Equivalence;
 import com.google.common.collect.MoreCollectors;
 import com.google.common.reflect.TypeToken;
