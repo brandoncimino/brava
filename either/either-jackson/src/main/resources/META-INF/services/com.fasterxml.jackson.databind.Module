@@ -1,0 +1,11 @@
+# This file lists the modules that Jackson will automatically load when you call JsonMapper.Builder#findAndAddModules().
+#
+# The file *must* be located in the folder:
+#   src/main/resources/META-INF/services/
+#
+# And have the name:
+#   com.fasterxml.jackson.databind.Module
+#
+# Each entry should be the fully-qualified name of a class that extends com.fasterxml.jackson.databind.Module.
+# TODO: I'm also pretty sure that the package of the module itself has to be `com.fasterxml.jackson.datatype.{x}`, but I can't find any documentation for that at the moment... 
+com.fasterxml.jackson.datatype.brava.EitherModule
