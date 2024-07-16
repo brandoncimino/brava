@@ -15,6 +15,11 @@ import java.util.function.Function;
  * @param <D>   the fourth parameter type
  * @param <E>   the fifth parameter type
  * @param <OUT> the result type
+ *
+ * @see java.util.function.BiFunction
+ * @see TriFunction
+ * @see QuadFunction
+ * @see HexaFunction
  */
 public interface PentaFunction<A, B, C, D, E, OUT> extends Function<Tuple5<A, B, C, D, E>, OUT> {
     OUT apply(A a, B b, C c, D d, E e);

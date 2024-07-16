@@ -16,6 +16,11 @@ import java.util.function.Function;
  * @param <E>   the fifth parameter type
  * @param <F>   the sixth parameter type
  * @param <OUT> the result type
+ *
+ * @see java.util.function.BiFunction
+ * @see TriFunction
+ * @see QuadFunction
+ * @see PentaFunction
  */
 @FunctionalInterface
 public interface HexaFunction<A, B, C, D, E, F, OUT> extends Function<Tuple6<A, B, C, D, E, F>, OUT> {

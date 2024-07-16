@@ -13,6 +13,10 @@ import java.util.function.Function;
  * @param <B>   the second parameter type
  * @param <C>   the third parameter type
  * @param <OUT> the result type
+ * @see java.util.function.BiFunction
+ * @see QuadFunction
+ * @see PentaFunction
+ * @see HexaFunction
  */
 @FunctionalInterface
 public interface TriFunction<A, B, C, OUT> extends Function<Tuple3<A, B, C>, OUT> {

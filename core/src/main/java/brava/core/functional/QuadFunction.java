@@ -17,6 +17,11 @@ import java.util.function.Function;
  * the prefix for 4 that corresponds to {@code bi-} should be {@code tetra-}, but that doesn't sound nearly as cool.
  * <p/>
  * Actually, it might still be more accurate to use {@code quadra-}...but I like {@code quad-}, so deal with it.
+ *
+ * @see java.util.function.BiFunction
+ * @see TriFunction
+ * @see PentaFunction
+ * @see HexaFunction
  */
 @FunctionalInterface
 public interface QuadFunction<A, B, C, D, OUT> extends Function<Tuple4<A, B, C, D>, OUT> {
