@@ -1,6 +1,6 @@
 package brava.core.collections;
 
-import brava.core.Unsafe;
+import brava.core.Unchecked;
 import com.google.common.collect.ObjectArrays;
 import com.google.errorprone.annotations.DoNotCall;
 import org.jetbrains.annotations.Contract;
@@ -18,7 +18,7 @@ public class CollectionHelpers {
 
         int i = 0;
         for (var it : stuff) {
-            destination[i] = Unsafe.cast(it);
+            destination[i] = Unchecked.cast(it);
             i++;
         }
 

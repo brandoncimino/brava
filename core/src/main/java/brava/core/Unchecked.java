@@ -3,11 +3,18 @@ package brava.core;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 
 /**
- * Sneaky hacks for bypassing annoying checked {@link Exception}s.
+ * Weird tricks Oracle HATES, including:
+ * <p>
+ * Primarily for:
+ * <ul>
+ *     <li>Bypassing annoying checked {@link Exception}s</li>
+ *     <li>Avoiding the need for {@link SuppressWarnings} on generic casts</li>
+ * </ul>
  *
  * @implNote Largely based on <a href="https://commons.apache.org/proper/commons-lang/apidocs/org/apache/commons/lang3/function/Failable.html">Apache Commons's {@code Failable}</a>.
  */
@@ -34,6 +41,32 @@ public final class Unchecked {
     @SuppressWarnings("unchecked")
     private static <R, T extends Throwable> R typeErasure(final Throwable throwable) throws T {
         throw (T) throwable;
+    }
+
+    /**
+     * Suppresses the {@code "unchecked"} cast warning that {@code (T) object} would normally produce.
+     *
+     * <h1>Example</h1>
+     * Vanilla way:
+     * <pre>{@code
+     * @SuppresWarning("unchecked")
+     * var casted = (T) object;
+     * return casted;
+     * }</pre>
+     * Using {@link #cast(Object)}:
+     * <pre>{@code
+     * return Unsafe.cast(object);
+     * }</pre>
+     *
+     * @param object the original object
+     * @param <T>    the desired type
+     * @return the object, cast to {@link T}
+     */
+    @Contract(pure = true, value = "null -> null; !null -> !null")
+    public static <T> @Nullable T cast(@Nullable Object object) {
+        @SuppressWarnings("unchecked")
+        var casted = (T) object;
+        return casted;
     }
 
     /**
