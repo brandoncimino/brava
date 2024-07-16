@@ -5,13 +5,15 @@ import org.jetbrains.annotations.ApiStatus;
 
 /**
  * <a href="https://en.wikipedia.org/wiki/Tuple">Tuple</a> types with psychotic type signatures.
+ *
+ * Included primarily to satisfy the <a href="https://en.wikipedia.org/wiki/Sunk_cost#Fallacy_effect">sunk-cost fallacy</a>.
  */
 @ApiStatus.NonExtendable
 @ApiStatus.Experimental
-@SuppressWarnings("DuplicatedCode")
+@SuppressWarnings("all")
 public interface TupleT<SELF extends Record & TupleT<SELF, T>, T> extends ListBase<T> {
     //region Factories
-    Empty EMPTY = new Empty();
+    final Empty EMPTY = new Empty();
 
     static Empty of() {
         return EMPTY;

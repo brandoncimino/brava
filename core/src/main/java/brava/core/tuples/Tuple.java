@@ -32,35 +32,48 @@ public interface Tuple<SELF extends Tuple<SELF>> extends CollectionBase<Object> 
     }
 
     /**
-     * @param a   the {@link Tuple1#a()}
-     * @param <A>
-     * @return
+     * @see Tuple1#Tuple1(A)
      */
     @Contract("_ -> new")
     static <A> @NotNull Tuple1<A> of(A a) {
         return new Tuple1<>(a);
     }
 
+    /**
+     * @see Tuple2#Tuple2(A, B)
+     */
     @Contract("_, _ -> new")
     static <A, B> @NotNull Tuple2<A, B> of(A a, B b) {
         return new Tuple2<>(a, b);
     }
 
+    /**
+     * @see Tuple3#Tuple3(A, B, C)
+     */
     @Contract("_, _, _ -> new")
     static <A, B, C> @NotNull Tuple3<A, B, C> of(A a, B b, C c) {
         return new Tuple3<>(a, b, c);
     }
 
+    /**
+     * @see Tuple4#Tuple4(A, B, C, D)
+     */
     @Contract("_, _, _, _ -> new")
     static <A, B, C, D> @NotNull Tuple4<A, B, C, D> of(A a, B b, C c, D d) {
         return new Tuple4<>(a, b, c, d);
     }
 
+    /**
+     * @see Tuple5#Tuple5(A, B, C, D, E)
+     */
     @Contract("_, _, _, _, _ -> new")
     static <A, B, C, D, E> @NotNull Tuple5<A, B, C, D, E> of(A a, B b, C c, D d, E e) {
         return new Tuple5<>(a, b, c, d, e);
     }
 
+    /**
+     * @see Tuple6#Tuple6(A, B, C, D, E, F)
+     */
     @Contract("_, _, _, _, _, _ -> new")
     static <A, B, C, D, E, F> @NotNull Tuple6<A, B, C, D, E, F> of(A a, B b, C c, D d, E e, F f) {
         return new Tuple6<>(a, b, c, d, e, f);
