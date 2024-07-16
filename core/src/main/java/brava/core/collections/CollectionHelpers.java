@@ -3,11 +3,13 @@ package brava.core.collections;
 import brava.core.Unchecked;
 import com.google.common.collect.ObjectArrays;
 import com.google.errorprone.annotations.DoNotCall;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
+@ApiStatus.Internal
 public class CollectionHelpers {
     /**
      * An implementation for {@link java.util.Collection#toArray(Object[])}.
