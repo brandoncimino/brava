@@ -10,12 +10,13 @@ class Tuple0Tests {
         var b = Tuple.of();
         Assertions.assertThat(a)
               .isSameAs(b)
-              .isSameAs(Tuple0.INSTANCE);
+              .isSameAs(Tuple0.instance());
     }
 
     @Test
     void tuple0_intern() {
         var a = Tuple.of();
+        @SuppressWarnings("deprecation") 
         var b = new Tuple0();
 
         Assertions.assertThat(a)

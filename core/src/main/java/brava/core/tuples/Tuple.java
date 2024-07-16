@@ -1,10 +1,13 @@
 package brava.core.tuples;
 
-import brava.core.collections.ListBase;
+import brava.core.collections.CollectionBase;
 import brava.core.functional.TriFunction;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 import java.util.function.Function;
 
 /**
@@ -17,16 +20,22 @@ import java.util.function.Function;
  *     <li>{@link Tuple3#reduce(TriFunction)}: Combines element into a single result.</li>
  * </ul>
  */
-public interface Tuple<SELF extends Tuple<SELF>> extends ListBase<Object> {
-    @Contract(pure = true)
-    @NotNull
-    SELF getSelf();
+public interface Tuple<SELF extends Tuple<SELF>> extends CollectionBase<Object> {
+    //region Factories
 
+    /**
+     * @return the singleton {@link Tuple0#instance()}
+     */
     @Contract(pure = true)
-    static Tuple0 of() {
-        return Tuple0.INSTANCE;
+    static @NotNull Tuple0 of() {
+        return Tuple0.instance();
     }
 
+    /**
+     * @param a   the {@link Tuple1#a()}
+     * @param <A>
+     * @return
+     */
     @Contract("_ -> new")
     static <A> @NotNull Tuple1<A> of(A a) {
         return new Tuple1<>(a);
@@ -56,8 +65,53 @@ public interface Tuple<SELF extends Tuple<SELF>> extends ListBase<Object> {
     static <A, B, C, D, E, F> @NotNull Tuple6<A, B, C, D, E, F> of(A a, B b, C c, D d, E e, F f) {
         return new Tuple6<>(a, b, c, d, e, f);
     }
+    //endregion
 
-    default <OUT> OUT reduce(Function<SELF, OUT> function) {
+    /**
+     * @return me, as my true {@link SELF}.
+     */
+    @Contract(pure = true)
+    @NotNull
+    SELF getSelf();
+
+    /**
+     * @param index the element index
+     * @return the corresponding element
+     */
+    @Contract(pure = true)
+    Object get(int index);
+
+    @Override
+    default @NotNull Iterator<Object> iterator() {
+        return new Iterator<>() {
+            private int position = 0;
+
+            @Override
+            public boolean hasNext() {
+                return position < size();
+            }
+
+            @Override
+            public Object next() {
+                // ⚠ It's stupid, but we can't rely on the `IndexOutOfBoundsException` thrown by `get()` because, 
+                // technically, `Iterator`'s contract requires a `NoSuchElementException` 🤷‍♀️
+                if (!hasNext()) {
+                    throw new NoSuchElementException();
+                }
+
+                return get(position++);
+            }
+        };
+    }
+
+    /**
+     * Combines my elements into a single {@link OUT}.
+     *
+     * @param function a {@link Function} that turns {@link SELF} ⇒ {@link OUT}
+     * @param <OUT>    the function output type
+     * @return the resulting {@link OUT}
+     */
+    default <OUT> OUT reduce(@Nonnull Function<SELF, OUT> function) {
         return function.apply(getSelf());
     }
 }
