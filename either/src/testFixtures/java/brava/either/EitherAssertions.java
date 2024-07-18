@@ -6,6 +6,7 @@ import org.assertj.core.api.SoftAssertions;
 import org.assertj.core.api.ThrowableAssert;
 
 import javax.annotation.Nonnull;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -116,9 +117,10 @@ public class EitherAssertions {
               .extracting(getX(hasWhich))
               .isEqualTo(expected);
 
-        Assertions.assertThatCode(() -> getX(hasWhich.other()).apply(actual))
+        var otherGetter = getX(hasWhich.other());
+        Assertions.assertThatCode(() -> otherGetter.apply(actual))
               .as("get" + hasWhich.other())
-              .isInstanceOf(IllegalStateException.class);
+            .isInstanceOf(NoSuchElementException.class);
     }
 
     private static void assert_equality(Either<?, ?> actual, Object expected, Which hasWhich) {

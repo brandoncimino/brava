@@ -10,6 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.Callable;
@@ -84,14 +85,15 @@ public final class Either<A, B> {
 
     /**
      * @return my {@link A} value
-     * @throws IllegalStateException I actually {@link #hasB()}
+     * @throws NoSuchElementException I actually {@link #hasB()}
      * @see #tryGetA()
      */
     @Contract(pure = true)
     @NotNull
     public A getA() {
         if (hasB()) {
-            throw new IllegalStateException(String.format("Can't get 🅰 because this %s contains 🅱 (%s)!", getClass().getSimpleName(), value));
+            throw new NoSuchElementException(
+                String.format("Can't get 🅰 because this %s contains 🅱 (%s)!", getClass().getSimpleName(), value));
         }
 
         return unsafeA();
@@ -99,14 +101,15 @@ public final class Either<A, B> {
 
     /**
      * @return my {@link B} value
-     * @throws IllegalStateException I actually {@link #hasA()}
+     * @throws NoSuchElementException I actually {@link #hasA()}
      * @see #tryGetB()
      */
     @NotNull
     @Contract(pure = true)
     public B getB() {
         if (hasA()) {
-            throw new IllegalStateException(String.format("Can't get 🅱 because this %s contains 🅰 (%s)!", getClass().getSimpleName(), value));
+            throw new NoSuchElementException(
+                String.format("Can't get 🅱 because this %s contains 🅰 (%s)!", getClass().getSimpleName(), value));
         }
 
         return unsafeB();
