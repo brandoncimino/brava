@@ -16,7 +16,16 @@ import java.util.Objects;
  *     <li>Avoiding the need for {@link SuppressWarnings} on generic casts</li>
  * </ul>
  *
+ * <h1>Disclaimer</h1>
+ * Use this class at your own risk.
+ *
  * @implNote Largely based on <a href="https://commons.apache.org/proper/commons-lang/apidocs/org/apache/commons/lang3/function/Failable.html">Apache Commons's {@code Failable}</a>.
+ * <p>
+ * The {@link FunctionalInterface}s in this type have several advantages over those in Apache Commons, liks <a href="https://commons.apache.org/proper/commons-lang/apidocs/org/apache/commons/lang3/function/FailableFunction.html">FailableFunction</a>:
+ * <ul>
+ *     <li>They contain {@code default} implementations for the base {@link java.util.function} interfaces, for easier interoperability</li>
+ *     <li>They have simpler type signatures by throwing {@link Throwable} instead of a parameterized type</li>
+ * </ul>
  */
 public final class Unchecked {
     /**
@@ -55,7 +64,7 @@ public final class Unchecked {
      * }</pre>
      * Using {@link #cast(Object)}:
      * <pre>{@code
-     * return Unsafe.cast(object);
+     * return Unchecked.cast(object);
      * }</pre>
      *
      * @param object the original object
@@ -69,10 +78,14 @@ public final class Unchecked {
         return casted;
     }
 
+    //region Supplier
+
     /**
-     * A {@link Supplier} that can {@link #rethrow(Throwable)} checked {@link Exception}s.
+     * A {@link java.util.function.Supplier} that can {@link #rethrow(Throwable)} checked {@link Exception}s.
      *
      * @param <T> the output type
+     * @implNote You generally shouldn't use {@link Unchecked} functional interfaces as input types, because they are kinda sneaky.
+     * Instead, use vanilla {@link java.util.function} types, and let callers use "wrapper" methods like {@link Unchecked#supplier(Supplier)} if they wish.
      */
     @FunctionalInterface
     @ApiStatus.NonExtendable
@@ -102,14 +115,14 @@ public final class Unchecked {
     }
 
     /**
-     * Creates a {@link java.util.function.Supplier} from a lambda expression that is allowed to throw checked {@link Exception}s.
+     * Creates a special {@link java.util.function.Supplier} from a lambda expression that is allowed to throw checked {@link Exception}s.
      *
      * <h1>Example</h1>
      * Using vanilla Java:
      * <pre>{@code
      * Stream.generate(() -> {
      *     try {
-     *         return Files.readString("stuff.txt");
+     *         return Files.readString(Path.of("stuff.txt"));
      *     } catch (IOException e){
      *         throw new RuntimeException(e);
      *     }
@@ -118,13 +131,15 @@ public final class Unchecked {
      * Using {@link #supplier(Supplier)}:
      * <pre>{@code
      * Stream.generate(
-     *     Unchecked.supplier(() -> Files.readString("stuff.txt"))
+     *     Unchecked.supplier(() -> Files.readString(Path.of("stuff.txt")))
      * );
      * }</pre>
      *
      * @param supplier code that returns a value and <i>might</i> throw any type of {@link Throwable}
      * @param <T>      the output type
-     * @return a new {@link java.util.function.Supplier}
+     * @return a new {@link Supplier}
+     * @see Supplier
+     * @see #get(Supplier)
      */
     @Contract(value = "_ -> param1", pure = true)
     public static <T> @NotNull Supplier<T> supplier(@NotNull Supplier<T> supplier) {
@@ -159,9 +174,121 @@ public final class Unchecked {
      * @param <T>      the output type
      * @return the result of {@code supplier}
      * @implNote Inspired by <a href="https://commons.apache.org/proper/commons-lang/apidocs/org/apache/commons/lang3/function/Failable.html#get-org.apache.commons.lang3.function.FailableSupplier-">Apache Commons's {@code Failable.get()}</a>.
+     * @see #supplier(Supplier)
      */
     public static <T> T get(@NotNull Supplier<T> supplier) {
-
         return supplier.get();
     }
+
+    //endregion
+
+    //region Function
+
+    /**
+     * A {@link java.util.function.Function} that can {@link #rethrow(Throwable)} checked {@link Exception}s.
+     *
+     * @param <IN>  the input type
+     * @param <OUT> the output type
+     * @implNote You generally shouldn't use {@link Unchecked} functional interfaces as input types, because they are kinda sneaky.
+     * Instead, use vanilla {@link java.util.function} types, and let callers use "wrapper" methods like {@link Unchecked#supplier(Supplier)} if they wish.
+     */
+    @ApiStatus.NonExtendable
+    @FunctionalInterface
+    public interface Function<IN, OUT> extends java.util.function.Function<IN, OUT> {
+        /**
+         * Invokes this function as-is, without messing with its exceptions.
+         *
+         * @param input the input to the function
+         * @return the output of the function
+         * @throws Throwable anything that the code throws, unaltered
+         */
+        OUT applyChecked(IN input) throws Throwable;
+
+        /**
+         * @apiNote any checked {@link Exception}s will be {@link #rethrow(Throwable)}n <i><b>without being wrapped</b></i>.
+         * If you wish to maintain the checked nature of the exception, use {@link #applyChecked(IN)} instead.
+         */
+        @ApiStatus.NonExtendable
+        default OUT apply(IN t) {
+            try {
+                return applyChecked(t);
+            } catch (Throwable e) {
+                return rethrow(e);
+            }
+        }
+    }
+
+    /**
+     * Creates a special {@link java.util.function.Function} from a lambda expression that is allowed to throw checked {@link Exception}s.
+     *
+     * <h1>Example</h1>
+     * Using vanilla Java:
+     * <pre>{@code
+     * Stream.of(Path.of("stuff.txt"))
+     *     .map(it -> {
+     *         try {
+     *             return Files.readString(it);
+     *         } catch (IOException e) {
+     *             throw new RuntimeException(e);
+     *         }
+     *     });
+     * }</pre>
+     * Using {@link Function}:
+     * <pre>{@code
+     * Stream.of(Path.of("stuff.txt"))
+     *     .map(Unchecked.function(it -> Files.readString(it)));
+     * }</pre>
+     *
+     * @param function
+     * @param <IN>
+     * @param <OUT>
+     * @return
+     */
+    @Contract(value = "_ -> param1", pure = true)
+    public static <IN, OUT> Unchecked.Function<IN, OUT> function(@NotNull Function<IN, OUT> function) {
+        return function;
+    }
+
+    /**
+     * Sends {@code input} to a {@link Function} and gets the result.
+     * <p>
+     * Any checked exceptions are {@link #rethrow(Throwable)}n <i><b>without being wrapped</b></i>.
+     *
+     * <h1>Example</h1>
+     * Using vanilla Java:
+     * <pre>{@code
+     * var file = Path.of("stuff.txt");
+     *
+     * final String content;
+     * try {
+     *     content = Files.readString(file);
+     * } catch (IOException e) {
+     *     throw new RuntimeException(e);
+     * }
+     * }</pre>
+     * Using {@link #apply(IN, Function)}:
+     * <pre>{@code
+     * var file = Path.of("stuff.txt");
+     *
+     * var content = Unchecked.apply(file, Files::readString);
+     * }</pre>
+     *
+     * @param input    the function's input
+     * @param function the code that <i>might</i> throw any kind of {@link Throwable}
+     * @param <IN>     the input type
+     * @param <OUT>    the output type
+     * @return the resulting {@link OUT}
+     * @apiNote Inspired by <a href="https://commons.apache.org/proper/commons-lang/apidocs/org/apache/commons/lang3/function/Failable.html#apply-org.apache.commons.lang3.function.FailableFunction-T-">Apache Commons's {@code Failable.apply()}</a>.
+     * <p>
+     * However, the {@code input} precedes the {@code function} because:
+     * <ol>
+     *     <li>Passing the {@code input} first informs the {@link IN} type parameter, improving code completion in the {@code function} lambda</li>
+     *     <li>If you want the {@code function} to come first, you can always call {@link #function(Function)}.{@link Function#apply(IN) apply(IN)}.</li>
+     * </ol>
+     */
+    public static <IN, OUT> OUT apply(IN input, @NotNull Function<IN, OUT> function) {
+        return function.apply(input);
+    }
+
+    //endregion
 }
