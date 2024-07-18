@@ -22,7 +22,14 @@ import java.util.function.Function;
  * @implNote The first time you call {@link Class#getRecordComponents()} appears to be quite slow (up to a second), but it becomes almost instant after that 🤷‍♀️
  */
 public final class Records {
+    /**
+     * Compares {@link RecordComponent}s by their {@link RecordComponent#getAccessor()}.
+     */
+    static final Equivalence<RecordComponent> recordComponentEquivalence = Equivalence.equals()
+        .onResultOf(RecordComponent::getAccessor);
+    
     //region Constructor stuff
+
 
     /**
      * @param recordType a {@link Record} type
@@ -71,8 +78,8 @@ public final class Records {
         var args        = Iterables.toArray(componentValues, Object.class);
         return Reflection.invoke(() -> constructor.newInstance(args));
     }
-
     //endregion
+
 
     /**
      * @param rec an instance of {@link R}
@@ -146,7 +153,6 @@ public final class Records {
     public static boolean areSameComponent(@Nullable RecordComponent a, @Nullable RecordComponent b) {
         return recordComponentEquivalence.equivalent(a, b);
     }
-
     /**
      * Represents a {@link RecordComponent} captured via {@link GetterMethod}.
      *
@@ -162,6 +168,7 @@ public final class Records {
          * The underlying {@link RecordComponent}.
          */
         private final @NotNull RecordComponent recordComponent;
+
 
         private Comp(@NotNull GetterMethod<R, T> getterMethod) {
             this.getterMethod = getterMethod;
@@ -200,14 +207,12 @@ public final class Records {
         public boolean isSameComponentAs(@Nullable RecordComponent other) {
             return Records.areSameComponent(getRecordComponent(), other);
         }
-
         @Override
         public int hashCode() {
             return recordComponentEquivalence.hash(getRecordComponent());
         }
-    }
 
-    static final Equivalence<RecordComponent> recordComponentEquivalence = Equivalence.equals().onResultOf(RecordComponent::getAccessor);
+    }
 
     /**
      * Used to capture <a href="https://docs.oracle.com/javase/tutorial/java/javaOO/methodreferences.html">method reference</a>s to {@link RecordComponent#getAccessor()}s.

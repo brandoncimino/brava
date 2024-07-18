@@ -1,7 +1,7 @@
 package com.fasterxml.jackson.datatype.brava;
 
 
-import brava.core.Combinatorial;
+import brava.core.collections.Combinatorial;
 import brava.core.tuples.Tuple2;
 import brava.either.Either;
 import brava.either.EitherAssertions;

@@ -1,6 +1,6 @@
 package com.fasterxml.jackson.datatype.brava;
 
-import brava.core.Combinatorial;
+import brava.core.collections.Combinatorial;
 import brava.either.Either;
 import brava.either.Which;
 import com.fasterxml.jackson.annotation.JsonIgnore;

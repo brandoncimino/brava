@@ -1,6 +1,6 @@
 package brava.either;
 
-import brava.core.Combinatorial;
+import brava.core.collections.Combinatorial;
 import brava.core.tuples.Tuple2;
 import org.assertj.core.api.SoftAssertions;
 import org.jetbrains.annotations.Nullable;

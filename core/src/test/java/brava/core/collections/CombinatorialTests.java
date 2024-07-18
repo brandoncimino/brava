@@ -1,5 +1,6 @@
-package brava.core;
+package brava.core.collections;
 
+import brava.core.Records;
 import brava.core.tuples.*;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;

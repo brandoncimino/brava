@@ -1,4 +1,4 @@
-package brava.core;
+package brava.core.collections;
 
 import brava.core.tuples.*;
 import com.google.common.collect.Streams;

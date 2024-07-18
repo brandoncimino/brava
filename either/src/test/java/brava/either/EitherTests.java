@@ -1,6 +1,6 @@
 package brava.either;
 
-import brava.core.Combinatorial;
+import brava.core.collections.Combinatorial;
 import com.google.common.base.Equivalence;
 import com.google.common.base.Preconditions;
 import org.assertj.core.api.Assertions;
