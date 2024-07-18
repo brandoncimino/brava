@@ -103,16 +103,6 @@ class RecordsGetterTests {
         public static final RecordComponent comp_YOLO = AnnoyingNames.class.getRecordComponents()[1];
     }
 
-    @Test
-    void getComponentByNameTest() {
-        var actual = Records.getComponentByName(AnnoyingNames.class, "yolo");
-        Assertions.assertThat(Records.areSameComponent(actual, AnnoyingNames.comp_yolo))
-              .isTrue();
-
-        Assertions.assertThat(Records.areSameComponent(actual, AnnoyingNames.comp_YOLO))
-              .isFalse();
-    }
-
     @MethodSource({
           "lambdaExpressions",
           "anonymousClasses",

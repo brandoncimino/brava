@@ -2,7 +2,7 @@ package brava.core;
 
 import brava.core.exceptions.UnreachableException;
 import com.google.common.base.Equivalence;
-import com.google.common.collect.MoreCollectors;
+import com.google.common.collect.Iterables;
 import com.google.common.reflect.TypeToken;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Contract;
@@ -20,6 +20,13 @@ import java.util.function.Function;
  * Hacker tools for working with {@link Record}s.
  */
 public final class Records {
+    //region Constructor stuff
+
+    /**
+     * @param recordType a {@link Record} type
+     * @param <R>        the type of {@link Record}
+     * @return the <a href="https://docs.oracle.com/javase/specs/jls/se21/html/jls-8.html#jls-8.10.4">canonical constructor</a> for {@link R}
+     */
     @Contract(pure = true)
     public static <R extends Record> @NotNull Constructor<R> getCanonicalConstructor(@NotNull TypeToken<R> recordType) {
         @SuppressWarnings("unchecked" /* Records are always `final`, so this is a safe cast. */)
@@ -27,6 +34,11 @@ public final class Records {
         return getCanonicalConstructor(rType);
     }
 
+    /**
+     * @param recordType a {@link Record} type
+     * @return the <a href="https://docs.oracle.com/javase/specs/jls/se21/html/jls-8.html#jls-8.10.4">canonical constructor</a> for {@link R}
+     * @param <R> the type of {@link Record}
+     */
     @Contract(pure = true)
     public static <R extends Record> @NotNull Constructor<R> getCanonicalConstructor(@NotNull Class<R> recordType) {
         var componentTypes = Arrays.stream(recordType.getRecordComponents())
@@ -40,9 +52,35 @@ public final class Records {
         }
     }
 
-    @Nullable
+    /**
+     * Instantiates {@link R} using its <a href="https://docs.oracle.com/javase/specs/jls/se21/html/jls-8.html#jls-8.10.4">canonical constructor</a>.
+     *
+     * @param recordType      the type of {@link Record}
+     * @param componentValues the arguments to the canonical {@link Constructor#newInstance(Object...)}
+     * @param <R>             the {@link Record} type
+     * @return a new {@link R} instance
+     */
+    @Contract(pure = true, value = "_, _ -> new")
+    public static <R extends Record> @NotNull R construct(
+        @NotNull TypeToken<R> recordType,
+        @NotNull Iterable<?> componentValues
+    ) {
+        var constructor = getCanonicalConstructor(recordType);
+        var args        = Iterables.toArray(componentValues, Object.class);
+        return Reflection.invoke(() -> constructor.newInstance(args));
+    }
+
+    //endregion
+
+    /**
+     * @param rec an instance of {@link R}
+     * @param component one of {@link R}'s {@link RecordComponent}s
+     * @return the result of the {@link RecordComponent#getAccessor()}
+     * @param <R> the {@link Record} type
+     * @throws IllegalArgumentException if the {@code component} isn't a member of {@link R}
+     */
     @Contract(pure = true)
-    public static <R extends Record> Object getComponentValue(@NotNull R rec, @NotNull RecordComponent component) {
+    public static <R extends Record> @Nullable Object getComponentValue(@NotNull R rec, @NotNull RecordComponent component) {
         if (!component.getDeclaringRecord().isInstance(rec)) {
             throw new IllegalArgumentException("The given %s `%s` is a part of %s, not %s!".formatted(RecordComponent.class.getSimpleName(), component.getName(), component.getDeclaringRecord(), rec.getClass()));
         }
@@ -78,16 +116,8 @@ public final class Records {
      * @throws IllegalArgumentException if the given {@link GetterMethod} isn't a method reference
      */
     @Contract(pure = true)
-    public static <R extends @NotNull Record, T> Comp<R, T> getComponentByGetter(GetterMethod<R, T> getterMethodReference) {
+    public static <R extends @NotNull Record, T> @NotNull Comp<R, T> getComponentByGetter(@NotNull GetterMethod<R, T> getterMethodReference) {
         return new Comp<>(getterMethodReference);
-    }
-
-    @Contract(pure = true)
-    @NotNull
-    public static RecordComponent getComponentByName(Class<? extends Record> recordType, String componentName) {
-        return Arrays.stream(recordType.getRecordComponents())
-              .filter(it -> it.getName().equals(componentName))
-              .collect(MoreCollectors.onlyElement());
     }
 
     /**
