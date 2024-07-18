@@ -2,10 +2,14 @@ package brava.core;
 
 import com.google.common.reflect.TypeToken;
 import org.assertj.core.api.Assertions;
+import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
+import java.util.NoSuchElementException;
 import java.util.stream.Stream;
 
 public class RecordBuilderTests {
@@ -30,6 +34,39 @@ public class RecordBuilderTests {
               .isEqualTo(vinyl);
     }
 
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings = "yolo")
+    void componentSet(String componentValue) {
+        var builder   = RecordBuilder.ofType(TypeToken.of(Vinyl.class));
+        var component = Vinyl.ARTIST;
+        builder.set(component, componentValue);
+
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(builder.hasComponentValue(component))
+                .as("hasComponentValue(%s)", component)
+                .isEqualTo(true);
+
+            softly.assertThat(builder.get(component))
+                .as("get(%s)", component)
+                .isEqualTo(componentValue);
+        });
+    }
+    
+    void componentNotSet() {
+        var builder = RecordBuilder.ofType(TypeToken.of(Vinyl.class));
+
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(builder.hasComponentValue(Vinyl.ARTIST))
+                .as("hasComponentValue(%s)", Vinyl.ARTIST)
+                .isFalse();
+
+            softly.assertThatCode(() -> builder.get(Vinyl.ARTIST))
+                .as("get(%s)", Vinyl.ARTIST)
+                .isInstanceOf(NoSuchElementException.class);
+        });
+    }
+
     @MethodSource("provideRecords")
     @ParameterizedTest
     void givenRecord_whenBuilderFromRecord_thenBuilderIsPopulated(Vinyl vinyl) {
@@ -50,7 +87,7 @@ public class RecordBuilderTests {
     void givenIncompleteBuilder_whenBuild_thenExceptionIsThrown() {
         var builder = RecordBuilder.ofType(TypeToken.of(Vinyl.class));
         Assertions.assertThatThrownBy(builder::build)
-              .isInstanceOf(IllegalStateException.class);
+            .isInstanceOf(NoSuchElementException.class);
     }
 
     @Test

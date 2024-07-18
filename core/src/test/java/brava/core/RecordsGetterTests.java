@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import java.lang.reflect.RecordComponent;
 import java.util.Arrays;
 import java.util.stream.Stream;
 
@@ -98,11 +97,6 @@ class RecordsGetterTests {
               .isTrue();
     }
 
-    record AnnoyingNames(String yolo, String YOLO) {
-        public static final RecordComponent comp_yolo = AnnoyingNames.class.getRecordComponents()[0];
-        public static final RecordComponent comp_YOLO = AnnoyingNames.class.getRecordComponents()[1];
-    }
-
     @MethodSource({
           "lambdaExpressions",
           "anonymousClasses",
@@ -110,14 +104,14 @@ class RecordsGetterTests {
     })
     @ParameterizedTest
     void givenLambdaExpression_whenCompCreated_thenExceptionIsThrown(Records.GetterMethod<?, ?> getter) {
-        Assertions.assertThatCode(() -> Records.getComponentByGetter(getter))
+        Assertions.assertThatCode(() -> Records.getComponent(getter))
               .isNotNull();
     }
 
     @MethodSource("methodReferenceGetters")
     @ParameterizedTest
     void givenMethodReference_whenCompCreated_thenCompIsCreated(RecordGetterInfo<?> recordGetterInfo) {
-        var comp = Records.getComponentByGetter(recordGetterInfo.getter);
+        var comp = Records.getComponent(recordGetterInfo.getter);
 
         var expectedComponent = Arrays.stream(recordGetterInfo.recordType().getRecordComponents())
               .filter(it -> it.getName().equals(recordGetterInfo.expectedName))

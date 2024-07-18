@@ -18,6 +18,8 @@ import java.util.function.Function;
 
 /**
  * Hacker tools for working with {@link Record}s.
+ *
+ * @implNote The first time you call {@link Class#getRecordComponents()} appears to be quite slow (up to a second), but it becomes almost instant after that 🤷‍♀️
  */
 public final class Records {
     //region Constructor stuff
@@ -116,7 +118,9 @@ public final class Records {
      * @throws IllegalArgumentException if the given {@link GetterMethod} isn't a method reference
      */
     @Contract(pure = true)
-    public static <R extends @NotNull Record, T> @NotNull Comp<R, T> getComponentByGetter(@NotNull GetterMethod<R, T> getterMethodReference) {
+    public static <R extends @NotNull Record, T> @NotNull Comp<R, T> getComponent(
+        @NotNull GetterMethod<R, T> getterMethodReference
+    ) {
         return new Comp<>(getterMethodReference);
     }
 
@@ -216,4 +220,37 @@ public final class Records {
     public interface GetterMethod<R extends @NotNull Record, T> extends Function<R, T>, Serializable {
 
     }
+
+    //region Mutations
+
+    /**
+     * @param original the original {@link R}
+     * @return a new {@link RecordBuilder} populated with {@code original}'s component values.
+     * @see RecordBuilder#from(Record)
+     */
+    @Contract(value = "_ -> new", pure = true)
+    public static <R extends @NotNull Record> @NotNull RecordBuilder<R> builder(@NotNull R original) {
+        return RecordBuilder.from(original);
+    }
+
+    /**
+     * Creates a new instance of {@link R} with one of its {@link RecordComponent}s modified.
+     *
+     * @param original the original {@link R}
+     * @param getter   a {@link GetterMethod} reference to one of {@link R}'s {@link RecordComponent#getAccessor()}s
+     * @param value    the new value for the {@link RecordComponent}
+     * @return a new instance of {@link R}
+     * @apiNote If you need to modify multiple components, you should instead call {@link #builder(Record)} and then chain multiple {@link RecordBuilder#with(GetterMethod, Object)} calls together.
+     */
+    public static <R extends @NotNull Record, T> @NotNull R with(
+        @NotNull R original,
+        @NotNull GetterMethod<R, T> getter,
+        T value
+    ) {
+        return RecordBuilder.from(original)
+            .with(getter, value)
+            .build();
+    }
+
+    //endregion
 }

@@ -47,16 +47,21 @@ public final class RecordBuilder<R extends @NotNull Record> {
         return new RecordBuilder<>(TypeToken.of(recordType));
     }
 
+    /**
+     * @param original the original {@link R}
+     * @return a new {@link RecordBuilder} populated with {@code original}'s component values
+     * @see Records#builder(Record)
+     */
     @Contract(pure = true, value = "_ -> new")
-    public static <R extends @NotNull Record> @NotNull RecordBuilder<R> from(@NotNull R rec) {
+    public static <R extends @NotNull Record> @NotNull RecordBuilder<R> from(@NotNull R original) {
         @SuppressWarnings("unchecked")
-        var recordClass = (Class<R>) rec.getClass();
+        var recordClass = (Class<R>) original.getClass();
         var recordToken = TypeToken.of(recordClass);
         var builder = new RecordBuilder<>(recordToken);
 
         var components = recordClass.getRecordComponents();
         for (var comp : components) {
-            builder.set(comp, Records.getComponentValue(rec, comp));
+            builder.set(comp, Records.getComponentValue(original, comp));
         }
 
         return builder;
@@ -94,6 +99,21 @@ public final class RecordBuilder<R extends @NotNull Record> {
 
         var wrapped = Records.recordComponentEquivalence.wrap(component);
         return components.put(wrapped, value);
+    }
+
+    /**
+     * Similar to {@link #set(RecordComponent, Object)}, but allows for method chaining and takes in a {@link brava.core.Records.GetterMethod}.
+     *
+     * @param getter
+     * @param value
+     * @param <T>
+     * @return
+     */
+    @Contract("_, _ -> this")
+    public <T> @NotNull RecordBuilder<R> with(@NotNull Records.GetterMethod<R, T> getter, T value) {
+        var component = Records.getComponent(getter);
+        this.set(component.getRecordComponent(), value);
+        return this;
     }
 
     /**
