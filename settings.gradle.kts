@@ -19,5 +19,3 @@ dependencyResolutionManagement {
         }
     }
 }
-include("either:either-jackson")
-findProject(":either:either-jackson")?.name = "either-jackson"
