@@ -25,6 +25,15 @@ public interface Tuple<SELF extends Tuple<SELF>> extends CollectionBase<Object> 
 
     /**
      * @return the singleton {@link Tuple0#instance()}
+     * @apiNote This is the same as {@link #of()}, but sometimes more clear to read.
+     */
+    @Contract(pure = true)
+    static @NotNull Tuple0 empty() {
+        return Tuple0.instance();
+    }
+
+    /**
+     * @return the singleton {@link Tuple0#instance()}
      */
     @Contract(pure = true)
     static @NotNull Tuple0 of() {
