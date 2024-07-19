@@ -291,4 +291,52 @@ public final class Unchecked {
     }
 
     //endregion
+
+    //region Runnable
+
+    /**
+     * An equivalent to {@link java.lang.Runnable} that is allowed to throw checked exceptions.
+     */
+    @FunctionalInterface
+    public interface Runnable extends java.lang.Runnable {
+        /**
+         * Executes my code without messing with checked exceptions.
+         */
+        void runChecked() throws Throwable;
+
+        /**
+         * Executes my code.
+         * <p>
+         * Any checked exceptions that occur will be {@link #rethrow(Throwable)}n <i><b>without being wrapped</b></i>.
+         */
+        default void run() {
+            try {
+                runChecked();
+            } catch (Throwable e) {
+                rethrow(e);
+            }
+        }
+    }
+
+    /**
+     * @param runnable some code that doesn't return a value and might throw a checked exception
+     * @return a new {@link Runnable}
+     */
+    @Contract(value = "_ -> param1", pure = true)
+    public static @NotNull Runnable runnable(@NotNull Runnable runnable) {
+        return runnable;
+    }
+
+    /**
+     * Executes some code.
+     * <p>
+     * Any checked exceptions will be {@link #rethrow(Throwable)}n <i><b>without being wrapped</b></i>.
+     *
+     * @param runnable some code that doesn't return a value and might throw a checked exception
+     */
+    public static void run(@NotNull Runnable runnable) {
+        runnable.run();
+    }
+
+    //endregion
 }
