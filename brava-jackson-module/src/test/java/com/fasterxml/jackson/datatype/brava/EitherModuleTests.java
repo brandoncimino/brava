@@ -229,7 +229,7 @@ public final class EitherModuleTests {
               : new TypeReference<HasEither<Integer, UUID>>() {
         };
 
-        var either = WhichHelpers.createEither(which, uuid);
+        var either = EitherModuleHelpers.createEither(which, uuid);
         var hasEither = new HasEither<>(either);
         var json = mapper.writeValueAsString(hasEither);
         HasEither<?, ?> fromJson = mapper.readValue(json, hasEitherType);
@@ -296,7 +296,7 @@ public final class EitherModuleTests {
 
         var jsonNode = mapper.readTree(json);
 
-        var deduced = WhichHelpers.hasMoreMatchingProperties(
+        var deduced = EitherModuleHelpers.hasMoreMatchingProperties(
               mapper.getDeserializationConfig(),
               jsonNode,
               scenario.info.a.javaType(),

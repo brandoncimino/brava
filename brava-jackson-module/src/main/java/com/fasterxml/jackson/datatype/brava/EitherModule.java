@@ -8,14 +8,9 @@ import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.deser.ContextualDeserializer;
 import com.fasterxml.jackson.databind.exc.InvalidDefinitionException;
 import com.fasterxml.jackson.databind.exc.MismatchedInputException;
-import com.fasterxml.jackson.databind.introspect.Annotated;
-import com.fasterxml.jackson.databind.introspect.BeanPropertyDefinition;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.type.TypeFactory;
-import com.google.common.collect.MoreCollectors;
-import com.google.common.collect.Streams;
 import com.google.common.primitives.Primitives;
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -25,8 +20,8 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 
@@ -40,10 +35,10 @@ import java.util.stream.Stream;
  * <h1>Deserialization</h1>
  * To decide whether we prefer to create an {@link Either#ofA(Object)} or {@link Either#ofB(Object)}:
  * <ol>
- *     <li>({@link WhichHelpers#isAnnotatedAsPreference(BeanProperty) 🔗}) If you've annotated the property with {@link Preference}, we'll prefer that.</li>
- *     <li>({@link WhichHelpers#isPrimitive(JavaType, JavaType) 🔗}) If one of the types {@link Class#isPrimitive()} or {@link Primitives#isWrapperType(Class)}, we'll prefer that.</li>
- *     <li>({@link WhichHelpers#isMoreSpecific(JavaType, JavaType) 🔗}) If one of the types is a <i>{@link Class#isAssignableFrom(Class) strict subtype}</i> of the other, we'll prefer that.</li>
- *     <li>({@link WhichHelpers#hasMoreMatchingProperties(DeserializationConfig, JsonNode, JavaType, JavaType) 🔗}) If one of the types has more properties matching the {@link JsonNode#fieldNames()}, we'll prefer that.</i></li>
+ *     <li>({@link EitherModuleHelpers#isAnnotatedAsPreference(BeanProperty) 🔗}) If you've annotated the property with {@link Preference}, we'll prefer that.</li>
+ *     <li>({@link EitherModuleHelpers#isPrimitive(JavaType, JavaType) 🔗}) If one of the types {@link Class#isPrimitive()} or {@link Primitives#isWrapperType(Class)}, we'll prefer that.</li>
+ *     <li>({@link EitherModuleHelpers#isMoreSpecific(JavaType, JavaType) 🔗}) If one of the types is a <i>{@link Class#isAssignableFrom(Class) strict subtype}</i> of the other, we'll prefer that.</li>
+ *     <li>({@link EitherModuleHelpers#hasMoreMatchingProperties(DeserializationConfig, JsonNode, JavaType, JavaType) 🔗}) If one of the types has more properties matching the {@link JsonNode#fieldNames()}, we'll prefer that.</i></li>
  * </ol>
  * If we run out of ideas, we'll throw a {@link MismatchedInputException}.
  */
@@ -169,10 +164,10 @@ public final class EitherModule extends SimpleModule {
             }
 
             return Optional.empty() // this is just here so that the code aligns better and is easier to read
-                  .or(() -> WhichHelpers.isAnnotatedAsPreference(property))
-                  .or(() -> WhichHelpers.isPrimitive(aType, bType))
-                  .or(() -> WhichHelpers.isMoreSpecific(aType, bType))
-                  .or(() -> WhichHelpers.hasMoreMatchingProperties(ctxt.getConfig(), jsonNode, aType, bType))
+                .or(() -> EitherModuleHelpers.isAnnotatedAsPreference(property))
+                .or(() -> EitherModuleHelpers.isPrimitive(aType, bType))
+                .or(() -> EitherModuleHelpers.isMoreSpecific(aType, bType))
+                .or(() -> EitherModuleHelpers.hasMoreMatchingProperties(ctxt.getConfig(), jsonNode, aType, bType))
                   .map(which ->
                         which == Which.A
                               ? Either.ofA(a.get())
@@ -348,73 +343,6 @@ public final class EitherModule extends SimpleModule {
     @Retention(RetentionPolicy.RUNTIME)
     public @interface Preference {
         Which value();
-    }
-
-    /**
-     * Calls {@link #findProperty(DeserializationConfig, JavaType, String)} for each of the given {@link JsonNode#fieldNames()},
-     * and returns the ones that were found.
-     *
-     * @param config         the {@link DeserializationContext} being used
-     * @param type           the {@link JavaType} in question
-     * @param jsonFieldNames the {@link JsonNode#fieldNames()} we are looking for
-     * @return a {@link Map} of {@link JsonNode#fieldNames()} → matching {@link BeanPropertyDefinition}s
-     */
-    @NotNull
-    static Map<String, BeanPropertyDefinition> getMatchingProperties(
-          DeserializationConfig config,
-          JavaType type,
-          Iterator<String> jsonFieldNames
-    ) {
-        assert !type.isPrimitive();
-
-        return Streams.stream(jsonFieldNames)
-              .flatMap(fieldName ->
-                    findProperty(config, type, fieldName)
-                          .map(p -> Map.entry(fieldName, p))
-                          .stream()
-              )
-              .collect(Collectors.toUnmodifiableMap(
-                    Map.Entry::getKey,
-                    Map.Entry::getValue
-              ));
-    }
-
-    /**
-     * @param config        the {@link DeserializationContext} being used
-     * @param type          the type that might have the property
-     * @param jsonFieldName the name of the field <b><i>in the JSON string</i></b>, which might match the property {@link #hasNameOrAlias(DeserializationConfig, BeanPropertyDefinition, String) name or alias}
-     * @return the matching {@link BeanPropertyDefinition}, if any
-     * @throws IllegalArgumentException if <b>two or more</b> properties matched the given {@code jsonFieldName}
-     */
-    @Contract(pure = true)
-    private static Optional<BeanPropertyDefinition> findProperty(
-          DeserializationConfig config,
-          JavaType type,
-          String jsonFieldName
-    ) {
-        return config.introspect(type)
-              .findProperties()
-              .stream()
-              .filter(it -> hasNameOrAlias(config, it, jsonFieldName))
-              .collect(MoreCollectors.toOptional());
-    }
-
-    /**
-     * @param config      the {@link DeserializationConfig} being used <i>(📎 you can retrieve this from {@link DeserializationContext#getConfig()} or {@link ObjectMapper#getDeserializationConfig()})</i>
-     * @param property    the Jackson {@link BeanPropertyDefinition} of the property in question
-     * @param nameOrAlias the string you're looking for
-     * @return {@code true} if the {@code nameOrAlias} matches the property's {@link BeanPropertyDefinition#hasName(PropertyName) name} or one of its {@link com.fasterxml.jackson.databind.AnnotationIntrospector#findPropertyAliases(Annotated) aliases}
-     */
-    @Contract(pure = true)
-    private static boolean hasNameOrAlias(
-          @NotNull DeserializationConfig config,
-          @NotNull BeanPropertyDefinition property,
-          @NotNull String nameOrAlias
-    ) {
-        var pn = PropertyName.construct(nameOrAlias);
-        return property.hasName(pn) || Stream.ofNullable(config.getAnnotationIntrospector().findPropertyAliases(property.getPrimaryMember()))
-              .flatMap(Collection::stream)
-              .anyMatch(pn::equals);
     }
 
     //endregion
