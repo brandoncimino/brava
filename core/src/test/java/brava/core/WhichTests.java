@@ -2,14 +2,17 @@ package brava.core;
 
 import brava.core.collections.Combinatorial;
 import brava.core.tuples.Tuple2;
+import org.assertj.core.api.Assertions;
 import org.assertj.core.api.SoftAssertions;
 import org.jetbrains.annotations.Nullable;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Stream;
 
 class WhichTests {
@@ -82,5 +85,26 @@ class WhichTests {
                   .as("isExclusivelyTrue(%s, %s, Boolean::parseBoolean)", aStr.getClass().getSimpleName(), bStr.getClass().getSimpleName())
                   .isEqualTo(expected);
         });
+    }
+
+    @Test
+    void other() {
+        Assertions.assertThat(Which.A.other())
+            .isEqualTo(Which.B);
+
+        Assertions.assertThat(Which.B.other())
+            .isEqualTo(Which.A);
+    }
+
+    @Test
+    void pickFrom() {
+        var a = UUID.randomUUID();
+        var b = UUID.randomUUID();
+
+        Assertions.assertThat(Which.A.pickFrom(a, b))
+            .isEqualTo(a);
+
+        Assertions.assertThat(Which.B.pickFrom(a, b))
+            .isEqualTo(b);
     }
 }
