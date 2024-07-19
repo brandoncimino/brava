@@ -11,16 +11,18 @@ repositories {
 }
 
 dependencies {
+    implementation(platform(libs.jackson.bom))
+    implementation("com.fasterxml.jackson.core:jackson-databind")
+    implementation(libs.guava)
     implementation(libs.jetbrains.annotations)
-    compileOnly(libs.jackson.annotations)
-    api(libs.guava)
-
+    api(project(":core"))
     testImplementation(platform(libs.junit.bom))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testImplementation(libs.assertj)
+    testImplementation(testFixtures(project(":core")))
+    testCompileOnly(libs.lombok)
+    testAnnotationProcessor(libs.lombok)
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-
-    testFixturesImplementation(libs.assertj)
 }
 
 tasks.test {
