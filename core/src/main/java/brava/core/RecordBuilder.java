@@ -69,6 +69,17 @@ public final class RecordBuilder<R extends @NotNull Record> {
 
     //endregion
 
+    private static void requireRecordComponent(
+        TypeToken<? extends Record> recordType,
+        RecordComponent recordComponent
+    ) {
+        Preconditions.checkArgument(
+            TypeToken.of(recordType.getRawType()).isSupertypeOf(recordComponent.getDeclaringRecord()),
+            "The component `%s` must be a member of the record type %s", recordComponent,
+            recordType
+        );
+    }
+
     /**
      * @param component a {@link Class#getRecordComponents()} of {@link R}
      * @return the corresponding value for the component
@@ -76,7 +87,7 @@ public final class RecordBuilder<R extends @NotNull Record> {
      * @throws NoSuchElementException   if the given {@link RecordComponent} hasn't been {@link #set(RecordComponent, Object)}
      */
     public @Nullable Object get(@NotNull RecordComponent component) {
-        Preconditions.checkArgument(recordType.isSupertypeOf(component.getDeclaringRecord()));
+        requireRecordComponent(recordType, component);
 
         var wrapped = Records.recordComponentEquivalence.wrap(component);
 
@@ -95,7 +106,7 @@ public final class RecordBuilder<R extends @NotNull Record> {
      * @return the previously {@link #set(RecordComponent, Object)} value, if there was one
      */
     public @Nullable Object set(@NotNull RecordComponent component, @Nullable Object value) {
-        Preconditions.checkArgument(recordType.isSupertypeOf(component.getDeclaringRecord()));
+        requireRecordComponent(recordType, component);
 
         var wrapped = Records.recordComponentEquivalence.wrap(component);
         return components.put(wrapped, value);
