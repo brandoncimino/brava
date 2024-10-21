@@ -5,10 +5,8 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import com.google.common.base.Equivalence;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nullable;
-import javax.annotation.concurrent.Immutable;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
@@ -25,7 +23,6 @@ import java.util.stream.Stream;
  * @apiNote This class is particularly useful for representing things that might have failed, where you want to return either a proper result or a raised {@link Exception}.
  * You can see this pattern used in Java itself at {@link java.util.concurrent.CompletableFuture#handle(BiFunction)}.
  */
-@Immutable
 public final class Either<A, B> {
     /**
      * Either the {@link A} or the {@link B} value.
@@ -35,7 +32,7 @@ public final class Either<A, B> {
     private final Object value;
     private final boolean hasA;
 
-    private Either(@CheckForNull Object value, boolean hasA) {
+    private Either(@Nullable Object value, boolean hasA) {
         if (value == null) {
             throw new IllegalArgumentException(String.format("You can't construct an %s from a null value!", getClass().getSimpleName()));
         }
@@ -183,20 +180,6 @@ public final class Either<A, B> {
         return value;
     }
 
-//    /**
-//     * @return <ul>
-//     * <li>if I {@link #hasA()} ⇒ ({@link #getA()}, null)</li>
-//     * <li>if I {@link #hasB()} ⇒ (null, {@link #getB()})</li>
-//     * </ul>
-//     */
-//    public Tuple2<A, B> getBoth() {
-//        if (hasA) {
-//            return Tuple.tuple(unsafeA(), null);
-//        } else {
-//            return Tuple.tuple(null, unsafeB());
-//        }
-//    }
-
     /**
      * Creates a new {@link Either} from <i>exactly one</i> non-null value.
      *
@@ -210,15 +193,16 @@ public final class Either<A, B> {
      */
     @NotNull
     @Contract(value = "null, null -> fail; !null, !null -> fail", pure = true)
+    @SuppressWarnings("java:S2637" /* Sonar's nullability analysis just isn't good enough */)
     public static <A, B> Either<@NotNull A, @NotNull B> of(@Nullable A a, @Nullable B b) {
-        var isAMissing = a == null;
-        var isBMissing = b == null;
+        final var aMissing = a == null;
+        final var bMissing = b == null;
 
-        if (isAMissing == isBMissing) {
+        if (aMissing == bMissing) {
             throw new IllegalArgumentException(String.format("You must provide EITHER 🅰 OR 🅱!%n🅰 %s%n🅱 %s", a, b));
         }
 
-        return isBMissing ? ofA(a) : ofB(b);
+        return bMissing ? ofA(a) : ofB(b);
     }
 
     /**
@@ -306,7 +290,7 @@ public final class Either<A, B> {
      *
      * @param ifA if I {@link #hasA()}, transform it with this
      * @param ifB if I {@link #hasB()}, transform it with this
-     * @param <T> the new output type
+     * @param <T> the output type
      * @return the resulting {@link T} value
      * @see #map(Function, Function)
      */
@@ -316,6 +300,19 @@ public final class Either<A, B> {
         } else {
             return ifB.apply(unsafeB());
         }
+    }
+
+    /**
+     * Applies a {@link Function} to me.
+     *
+     * @param function the function that transforms me into {@link T}
+     * @param <T>      the output type
+     * @return the resulting {@link T} value
+     * @apiNote In most cases you should use {@link #handle(Function, Function)} over this method, which keeps things clean and separate.
+     * @see #handle(Function, Function)
+     */
+    public <T> T handle(@NotNull Function<Either<A, B>, T> function) {
+        return function.apply(this);
     }
 
     /**
@@ -458,5 +455,31 @@ public final class Either<A, B> {
     @Contract(pure = true)
     public int hashCode() {
         return value.hashCode();
+    }
+
+    /**
+     * Either returns my {@link A} or {@code throw}s my {@link EXCEPTION}.
+     *
+     * <h1>Example</h1>
+     * The primary use case for this method is in an {@link Either}-producing method chain via {@link #handle(Function)}:
+     * <pre>{@code
+     * Stuff stuff = Either.resultOf(() -> Files.readString("stuff.txt"))
+     *     .mapA(raw -> Stuff.parse(raw))
+     *     .handle(Either::getOrThrow);
+     * }</pre>
+     *
+     * @param valueOrException "this" {@link Either} <i>(think of this method as an <a href="https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/extension-methods">extension method</a>)</i>
+     * @param <A>              my value, if I went off without a hitch
+     * @param <EXCEPTION>      the {@link Throwable} that I may have caught
+     * @return my {@link A}, if I {@link #hasA()}
+     * @throws EXCEPTION if I {@link #hasB()}, my {@link EXCEPTION} will be <b>re-thrown</b>
+     */
+    public static <A, EXCEPTION extends Throwable> A getOrThrow(Either<A, EXCEPTION> valueOrException)
+        throws EXCEPTION {
+        if (valueOrException.hasA) {
+            return valueOrException.unsafeA();
+        }
+
+        throw valueOrException.unsafeB();
     }
 }
