@@ -9,8 +9,6 @@ import java.util.Objects;
 
 /**
  * Weird tricks Oracle HATES, including:
- * <p>
- * Primarily for:
  * <ul>
  *     <li>Bypassing annoying checked {@link Exception}s</li>
  *     <li>Avoiding the need for {@link SuppressWarnings} on generic casts</li>
@@ -21,7 +19,7 @@ import java.util.Objects;
  *
  * @implNote Largely based on <a href="https://commons.apache.org/proper/commons-lang/apidocs/org/apache/commons/lang3/function/Failable.html">Apache Commons's {@code Failable}</a>.
  * <p>
- * The {@link FunctionalInterface}s in this type have several advantages over those in Apache Commons, liks <a href="https://commons.apache.org/proper/commons-lang/apidocs/org/apache/commons/lang3/function/FailableFunction.html">FailableFunction</a>:
+ * The {@link FunctionalInterface}s in this type have several advantages over those in Apache Commons, like <a href="https://commons.apache.org/proper/commons-lang/apidocs/org/apache/commons/lang3/function/FailableFunction.html">FailableFunction</a>:
  * <ul>
  *     <li>They contain {@code default} implementations for the base {@link java.util.function} interfaces, for easier interoperability</li>
  *     <li>They have simpler type signatures by throwing {@link Throwable} instead of a parameterized type</li>
@@ -111,6 +109,20 @@ public final class Unchecked {
             } catch (Throwable e) {
                 return rethrow(e);
             }
+        }
+
+        /**
+         * Invokes {@link #getChecked()}, catching any thrown {@link Exception}s.
+         *
+         * @return {@link Either}:
+         * <ul>
+         *     <li>🅰 The {@link T} result of {@link #getChecked()}</li>
+         *     <li>🅱 The caught exception</li>
+         * </ul>
+         * @see Either#resultOf(Supplier)
+         */
+        default Either<T, Throwable> tryGet() {
+            return Either.resultOf(this);
         }
     }
 
