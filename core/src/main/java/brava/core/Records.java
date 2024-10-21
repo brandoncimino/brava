@@ -21,6 +21,7 @@ import java.util.function.Function;
  *
  * @implNote The first time you call {@link Class#getRecordComponents()} appears to be quite slow (up to a second), but it becomes almost instant after that 🤷‍♀️
  */
+@ApiStatus.Experimental
 public final class Records {
     /**
      * Compares {@link RecordComponent}s by their {@link RecordComponent#getAccessor()}.
