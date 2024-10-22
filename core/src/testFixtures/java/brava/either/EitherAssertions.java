@@ -10,6 +10,7 @@ import org.assertj.core.api.ThrowableAssert;
 import javax.annotation.Nonnull;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.concurrent.atomic.LongAdder;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -48,15 +49,18 @@ public class EitherAssertions {
      */
     public static void validate(@Nonnull Either<?, ?> actual, @Nonnull Object expected, @Nonnull Which which) {
         Assertions.assertThat(actual)
-              .as(String.valueOf(actual))
-              .satisfies(
-                    wrapWithAsserts(it -> assert_hasX(actual, which)),
-                    wrapWithAsserts(it -> assert_getX(actual, expected, which)),
-                    wrapWithAsserts(it -> assert_tryGetX(actual, expected, which)),
-                    wrapWithAsserts(it -> assert_streamX(actual, expected, which)),
-                    wrapWithAsserts(it -> assert_getValue(actual, expected)),
-                    wrapWithAsserts(it -> assert_equality(actual, expected, which))
-              );
+            .as(String.valueOf(actual))
+            .satisfies(
+                wrapWithAsserts(it -> assert_hasX(actual, which)),
+                wrapWithAsserts(it -> assert_getX(actual, expected, which)),
+                wrapWithAsserts(it -> assert_tryGetX(actual, expected, which)),
+                wrapWithAsserts(it -> assert_streamX(actual, expected, which)),
+                wrapWithAsserts(it -> assert_getValue(actual, expected)),
+                wrapWithAsserts(it -> assert_equality(actual, expected, which)),
+                wrapWithAsserts(it -> Assertions.assertThat(it.hasWhich()).as("hasWhich()").isEqualTo(which)),
+                wrapWithAsserts(it -> assert_toWhatIHave(actual)),
+                wrapWithAsserts(it -> assert_toWhatIHaveNot(actual))
+            );
     }
 
     public static <T> Either<T, T> createEither(Which whichHasValue, T value) {
@@ -68,60 +72,62 @@ public class EitherAssertions {
 
     private static void assert_getValue(Either<?, ?> actual, Object expected) {
         Assertions.assertThat(actual)
-              .as("getValue")
-              .extracting(Either::getValue)
-              .isEqualTo(expected);
+            .as("getValue")
+            .extracting(Either::getValue)
+            .isEqualTo(expected);
     }
 
     private static void assert_tryGetX(Either<?, ?> actual, Object expected, Which hasWhich) {
         Assertions.assertThat(actual)
-              .as("tryGet" + hasWhich)
-              .extracting(
-                    tryGetX(hasWhich),
-                    InstanceOfAssertFactories.OPTIONAL)
-              .get()
-              .isEqualTo(expected);
+            .as("tryGet" + hasWhich)
+            .extracting(
+                tryGetX(hasWhich),
+                InstanceOfAssertFactories.OPTIONAL
+            )
+            .get()
+            .isEqualTo(expected);
 
         Assertions.assertThat(actual)
-              .as("tryGet" + hasWhich.other())
-              .extracting(
-                    tryGetX(hasWhich.other()),
-                    InstanceOfAssertFactories.OPTIONAL)
-              .isEmpty();
+            .as("tryGet" + hasWhich.other())
+            .extracting(
+                tryGetX(hasWhich.other()),
+                InstanceOfAssertFactories.OPTIONAL
+            )
+            .isEmpty();
     }
 
     private static void assert_hasX(Either<?, ?> actual, Which hasWhich) {
         Assertions.assertThat(actual.hasA())
-              .as("has" + hasWhich)
-              .isEqualTo(hasWhich == Which.A);
+            .as("has" + hasWhich)
+            .isEqualTo(hasWhich == Which.A);
 
         Assertions.assertThat(actual.hasB())
-              .as("has" + hasWhich)
-              .isEqualTo(hasWhich == Which.B);
+            .as("has" + hasWhich)
+            .isEqualTo(hasWhich == Which.B);
     }
 
     private static <A, B> void assert_streamX(Either<A, B> actual, Object expected, Which hasWhich) {
         Assertions.assertThat(actual)
-              .as("stream" + hasWhich)
-              .extracting(streamX(hasWhich), InstanceOfAssertFactories.STREAM)
-              .singleElement()
-              .isEqualTo(expected);
+            .as("stream" + hasWhich)
+            .extracting(streamX(hasWhich), InstanceOfAssertFactories.STREAM)
+            .singleElement()
+            .isEqualTo(expected);
 
         Assertions.assertThat(actual)
-              .as("stream" + hasWhich.other())
-              .extracting(streamX(hasWhich.other()), InstanceOfAssertFactories.STREAM)
-              .isEmpty();
+            .as("stream" + hasWhich.other())
+            .extracting(streamX(hasWhich.other()), InstanceOfAssertFactories.STREAM)
+            .isEmpty();
     }
 
     private static <A, B> void assert_getX(Either<A, B> actual, Object expected, Which hasWhich) {
         Assertions.assertThat(actual)
-              .as("get" + hasWhich)
-              .extracting(getX(hasWhich))
-              .isEqualTo(expected);
+            .as("get" + hasWhich)
+            .extracting(getX(hasWhich))
+            .isEqualTo(expected);
 
         var otherGetter = getX(hasWhich.other());
         Assertions.assertThatCode(() -> otherGetter.apply(actual))
-              .as("get" + hasWhich.other())
+            .as("get" + hasWhich.other())
             .isInstanceOf(NoSuchElementException.class);
     }
 
@@ -132,7 +138,35 @@ public class EitherAssertions {
         };
 
         Assertions.assertThat(actual)
-              .isEqualTo(equivalent);
+            .isEqualTo(equivalent);
+    }
+
+    private static <A, B> void assert_toWhatIHave(Either<A, B> actual) {
+        var toWhatIHave = switch (actual.hasWhich()) {
+            case A -> actual.toA(b -> Assertions.fail("Should not have been invoked!"));
+            case B -> actual.toB(a -> Assertions.fail("Should not have been invoked!"));
+        };
+
+        Assertions.assertThat(toWhatIHave)
+            .isSameAs(actual.getValue());
+    }
+
+    private static void assert_toWhatIHaveNot(Either<?, ?> actual) {
+        var counter = new LongAdder();
+        var got = switch (actual.hasWhich()) {
+            case A -> actual.toB(a -> {
+                counter.increment();
+                return null;
+            });
+            case B -> actual.toA(b -> {
+                counter.increment();
+                return null;
+            });
+        };
+
+        Assertions.assertThat(got).isNull();
+        Assertions.assertThat(counter)
+            .as("invocation count of mapper function").hasValue(1);
     }
 
     /**

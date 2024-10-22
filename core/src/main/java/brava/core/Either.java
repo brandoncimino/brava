@@ -285,6 +285,8 @@ public final class Either<A, B> {
         }
     }
 
+    //region Transforming
+    
     /**
      * Produces a value of {@link T} from my {@link #value}, whether I {@link #hasA()} or {@link #hasB()}.
      *
@@ -303,16 +305,29 @@ public final class Either<A, B> {
     }
 
     /**
-     * Applies a {@link Function} to me.
+     * If I:
+     * <ul>
+     *     <li>{@link #hasA()}, return it</li>
+     *     <li>{@link #hasB()}, apply {@code ifB} to it</li>
+     * </ul>
      *
-     * @param function the function that transforms me into {@link T}
-     * @param <T>      the output type
-     * @return the resulting {@link T} value
-     * @apiNote In most cases you should use {@link #handle(Function, Function)} over this method, which keeps things clean and separate.
-     * @see #handle(Function, Function)
+     * @param ifB if I {@link #hasB()}, this function transforms it into {@link A}
+     * @return an {@link A} value
      */
-    public <T> T handle(@NotNull Function<Either<A, B>, T> function) {
-        return function.apply(this);
+    public A toA(@NotNull Function<? super B, ? extends A> ifB) {
+        if (hasA) {
+            return unsafeA();
+        }
+
+        return ifB.apply(unsafeB());
+    }
+
+    public B toB(@NotNull Function<A, B> ifA) {
+        if (hasA) {
+            return ifA.apply(unsafeA());
+        }
+
+        return unsafeB();
     }
 
     /**
@@ -332,6 +347,10 @@ public final class Either<A, B> {
             return Either.ofB(ifB.apply(unsafeB()));
         }
     }
+
+    //endregion
+
+    //region Equality
 
     /**
      * Determines the equality of {@code this} with another {@link Either}.
@@ -457,29 +476,5 @@ public final class Either<A, B> {
         return value.hashCode();
     }
 
-    /**
-     * Either returns my {@link A} or {@code throw}s my {@link EXCEPTION}.
-     *
-     * <h1>Example</h1>
-     * The primary use case for this method is in an {@link Either}-producing method chain via {@link #handle(Function)}:
-     * <pre>{@code
-     * Stuff stuff = Either.resultOf(() -> Files.readString("stuff.txt"))
-     *     .mapA(raw -> Stuff.parse(raw))
-     *     .handle(Either::getOrThrow);
-     * }</pre>
-     *
-     * @param valueOrException "this" {@link Either} <i>(think of this method as an <a href="https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/extension-methods">extension method</a>)</i>
-     * @param <A>              my value, if I went off without a hitch
-     * @param <EXCEPTION>      the {@link Throwable} that I may have caught
-     * @return my {@link A}, if I {@link #hasA()}
-     * @throws EXCEPTION if I {@link #hasB()}, my {@link EXCEPTION} will be <b>re-thrown</b>
-     */
-    public static <A, EXCEPTION extends Throwable> A getOrThrow(Either<A, EXCEPTION> valueOrException)
-        throws EXCEPTION {
-        if (valueOrException.hasA) {
-            return valueOrException.unsafeA();
-        }
-
-        throw valueOrException.unsafeB();
-    }
+    //endregion
 }

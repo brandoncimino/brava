@@ -19,7 +19,6 @@ import java.util.UUID;
 import java.util.stream.Stream;
 
 class EitherTests implements WithAssertions {
-    //region Tests
 
     @Test
     void either_rejectsBoth() {
@@ -215,7 +214,6 @@ class EitherTests implements WithAssertions {
               .onResultOf(it -> Assertions.fail("This Equivalence comparer should not have been invoked!"));
     }
 
-    //    @Test(dataProvider = "provideEquivalenceData")
     @ParameterizedTest
     @MethodSource("provideEquivalenceScenarios")
     <T> void givenEithersWithSameSlot_whenEqualsWithEquivalence_thenEquivalenceIsUsed(
@@ -289,6 +287,4 @@ class EitherTests implements WithAssertions {
                   .isFalse();
         });
     }
-
-    //endregion
 }
