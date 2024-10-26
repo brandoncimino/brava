@@ -16,9 +16,7 @@ import com.fasterxml.jackson.databind.exc.InvalidDefinitionException;
 import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.datatype.brava.EitherTestData.EitherInfo;
-import com.fasterxml.jackson.datatype.brava.EitherTestData.HasEither;
-import com.fasterxml.jackson.datatype.brava.EitherTestData.TypedValue;
-import lombok.SneakyThrows;
+import com.fasterxml.jackson.datatype.brava.ExampleTypes.HasEither;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.assertj.core.api.SoftAssertions;
@@ -93,10 +91,9 @@ public final class EitherModuleTests {
     }
 
     @Test
-    @SneakyThrows
-    void givenAmbiguousJson_whenPropertyHasAnnotatedPreference_thenAnnotatedPreferenceIsUsed() {
+    void givenAmbiguousJson_whenPropertyHasAnnotatedPreference_thenAnnotatedPreferenceIsUsed() throws Exception {
         @SuppressWarnings("Convert2Diamond" /* Just for safety, 'cus we're dealing with lots of type nonsense here */)
-        var value = new EitherTestData.HasAnnotatedPreference<BigInteger, BigDecimal>(
+        var value = new ExampleTypes.HasAnnotatedPreference<BigInteger, BigDecimal>(
               Either.ofA(BigInteger.TEN),
               Either.ofB(BigDecimal.TEN)
         );
@@ -104,11 +101,29 @@ public final class EitherModuleTests {
         var mapper = createMapper();
         var json = mapper.writeValueAsString(value);
 
-        var fromJson = mapper.readValue(json, new TypeReference<EitherTestData.HasAnnotatedPreference<BigInteger, BigDecimal>>() {
+        var fromJson = mapper.readValue(json, new TypeReference<ExampleTypes.HasAnnotatedPreference<BigInteger, BigDecimal>>() {
         });
 
         Assertions.assertThat(fromJson)
               .isEqualTo(value);
+    }
+
+    @Test
+    void givenAmbiguousJson_whenPropertyHasAnnotatedPreference_thenAnnotatedPreferenceIsUsed_RECORD() throws Exception {
+        @SuppressWarnings("Convert2Diamond" /* Just for safety, 'cus we're dealing with lots of type nonsense here */)
+        var value = new ExampleTypes.HasAnnotatedPreference.Record<BigInteger, BigDecimal>(
+            Either.ofA(BigInteger.TEN),
+            Either.ofB(BigDecimal.TEN)
+        );
+
+        var mapper = createMapper();
+        var json   = mapper.writeValueAsString(value);
+
+        var fromJson = mapper.readValue(json, new TypeReference<ExampleTypes.HasAnnotatedPreference.Record<BigInteger, BigDecimal>>() {
+        });
+
+        Assertions.assertThat(fromJson)
+            .isEqualTo(value);
     }
 
     public static Stream<EitherInfo<?, ?>> provideUnambiguousTypes_noWhich() {
@@ -118,26 +133,25 @@ public final class EitherModuleTests {
 
     @ParameterizedTest
     @MethodSource("provideUnambiguousTypes_noWhich")
-    @SneakyThrows
-    void givenJsonListOfUnambiguousTypes_whenDeserializedToListOfEither_thenEithersAreConstructed(EitherInfo<?, ?> eitherInfo) {
+    void givenJsonListOfUnambiguousTypes_whenDeserializedToListOfEither_thenEithersAreConstructed(EitherInfo<?, ?> eitherInfo) throws Exception {
         var mapper = createMapper();
-        var list = List.of(eitherInfo.a.value(), eitherInfo.b.value());
+        var list = List.of(eitherInfo.a().value(), eitherInfo.b().value());
         var json = createMapper().writeValueAsString(list);
 
         var listType = mapper.getTypeFactory().constructCollectionLikeType(List.class, eitherInfo.eitherType());
         List<Either<?, ?>> fromJson = mapper.readValue(json, listType);
 
         Assertions.assertThat(fromJson)
-              .containsExactly(Either.ofA(eitherInfo.a.value()), Either.ofB(eitherInfo.b.value()));
+            .containsExactly(Either.ofA(eitherInfo.a().value()), Either.ofB(eitherInfo.b().value()));
 
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(fromJson)
                   .first()
-                  .isEqualTo(Either.ofA(eitherInfo.a.value()));
+                .isEqualTo(Either.ofA(eitherInfo.a().value()));
 
             softly.assertThat(fromJson)
                   .last()
-                  .isEqualTo(Either.ofB(eitherInfo.b.value()));
+                .isEqualTo(Either.ofB(eitherInfo.b().value()));
         });
     }
 
@@ -154,12 +168,11 @@ public final class EitherModuleTests {
 
     @ParameterizedTest
     @MethodSource("provideUnsupportedTypes")
-    @SneakyThrows
     void givenMissingTypeIsUnsupported_whenDeserializedToEither_thenDeserializationFails(
           TypedValue<?> unsupportedType,
           TypedValue<?> supportedType,
           Which whichIsSupported
-    ) {
+    ) throws Exception {
         var mapper = createMapper();
         var value = supportedType.value();
         var json = mapper.writeValueAsString(value);
@@ -197,8 +210,7 @@ public final class EitherModuleTests {
 
     @ParameterizedTest
     @MethodSource("provideUnambiguousTypes")
-    @SneakyThrows
-    void givenUnambiguousJson_whenDeserializedToEither_thenCorrectEitherIsCreated(EitherScenario<?, ?> scenario) {
+    void givenUnambiguousJson_whenDeserializedToEither_thenCorrectEitherIsCreated(EitherScenario<?, ?> scenario) throws Exception {
         var mapper = createMapper();
         var value = scenario.info.get(scenario.which).value();
         var json = mapper.writeValueAsString(value);
@@ -215,9 +227,8 @@ public final class EitherModuleTests {
      * {@link com.fasterxml.jackson.databind.deser.ContextualDeserializer#createContextual(DeserializationContext, BeanProperty)}
      */
     @ParameterizedTest
-    @SneakyThrows
     @EnumSource
-    void givenEitherInProperty_whenDeserialized_thenEitherIsConstructed(Which which) {
+    void givenEitherInProperty_whenDeserialized_thenEitherIsConstructed(Which which) throws Exception {
         var mapper = createMapper();
         var uuid = UUID.randomUUID();
 
@@ -234,7 +245,7 @@ public final class EitherModuleTests {
         Assertions.assertThat(fromJson)
               .hasSameClassAs(hasEither)
               .isEqualTo(hasEither)
-              .extracting(HasEither::getValue)
+            .extracting(ExampleTypes.HasEither::getValue)
               .satisfies(it -> EitherAssertions.validate(it, uuid, which));
     }
 
@@ -269,8 +280,7 @@ public final class EitherModuleTests {
 
     @ParameterizedTest
     @MethodSource("provideDeducibleByProperties")
-    @SneakyThrows
-    void deduceByPropertiesIsRecursiveTest(EitherScenario<?, ?> scenario) {
+    void deduceByPropertiesIsRecursiveTest(EitherScenario<?, ?> scenario) throws Exception {
         var mapper = JsonMapper.builder()
               .configure(JsonReadFeature.ALLOW_MISSING_VALUES, true)
               .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
@@ -278,7 +288,7 @@ public final class EitherModuleTests {
 
         var value = scenario.info.get(scenario.which).value();
         var json = mapper.writeValueAsString(value);
-        var parentType = EitherTestData.requireSameParent(scenario.info.a.javaType(), scenario.info.b.javaType());
+        var parentType = EitherTestData.requireSameParent(scenario.info.a().javaType(), scenario.info.b().javaType());
 
         Assertions.assertThatCode(() -> mapper.readValue(json, parentType))
               .as("""
@@ -287,8 +297,8 @@ public final class EitherModuleTests {
                             🅱 %s
                           """,
                     parentType,
-                    scenario.info.a.javaType(),
-                    scenario.info.b.javaType()
+                  scenario.info.a().javaType(),
+                  scenario.info.b().javaType()
               )
               .isInstanceOf(InvalidDefinitionException.class);
 
@@ -297,8 +307,8 @@ public final class EitherModuleTests {
         var deduced = EitherModuleHelpers.hasMoreMatchingProperties(
               mapper.getDeserializationConfig(),
               jsonNode,
-              scenario.info.a.javaType(),
-              scenario.info.b.javaType()
+            scenario.info.a().javaType(),
+            scenario.info.b().javaType()
         );
 
         Assertions.assertThat(deduced)
