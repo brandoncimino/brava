@@ -66,8 +66,7 @@ public final class EitherModuleTests {
 
     @ParameterizedTest
     @MethodSource("provideSupportedTypes")
-    @SneakyThrows
-    void givenEither_whenSerialized_thenSerializedAsValue(EitherScenario<?, ?> scenario) {
+    void givenEither_whenSerialized_thenSerializedAsValue(EitherScenario<?, ?> scenario) throws Exception {
         var mapper = createMapper();
         var value = scenario.info.get(scenario.which).value();
         var either = scenario.which == Which.A ? Either.ofA(value) : Either.ofB(value);
@@ -81,8 +80,7 @@ public final class EitherModuleTests {
     }
 
     @Test
-    @SneakyThrows
-    void givenJsonOfNeither_whenDeserializedToEither_thenExceptionIsThrown() {
+    void givenJsonOfNeither_whenDeserializedToEither_thenExceptionIsThrown() throws Exception {
         var mapper = createMapper();
         var uuid = UUID.randomUUID();
         var json = mapper.writeValueAsString(uuid);
