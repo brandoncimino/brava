@@ -1,3 +1,88 @@
+:tip-caption: 📎
+:note-caption: 📝
+:warning-caption: ⚠️
+:caution-caption: ‼️
+:important-caption: ℹ️
+
 = Brava
 
 Brandon's Java utilities.
+
+== Publishing to Maven Central
+
+. Created an account on https://central.sonatype.org/
+_(which is actually "Maven Central", or maybe "Nexus"?)_.
+- Linked my Github account, which automatically created the `io.github.brandoncimino` "namespace" _(actually the Maven `groupId`)_.
+
+=== Creating "GPG Key(s)"
+
+[NOTE]
+====
+"GPG", "GnuPG", and "GNU Privacy Guard" all refer to the command line tool `gpg`.
+====
+
+. Installed the _(windows version of the)_ `gpg` command line tool from https://community.chocolatey.org/packages/Gpg4win[chocolatey]:
++
+[source,powershell]
+choco install gpg4win -a
+
+. Generated the so-called "GPG Key(s)":
++
+--
+[source,powershell]
+gpg --gen-key
+
+Entering my:
+
+- Name as `Brandon Cimino`
+- Email as `brandon.cimino@gmail.com`
+--
+
+. Entered a "passphrase" _(henceforth referred to as 💬)_ in a popup application window
+. From the output of the command, took the value of 🔐 _(I have no idea if this value is sensitive or not)_
+
+[source,powershell]
+pub   ed25519 2024-07-22 [SC] [expires: 2027-07-22]
+      🔐
+uid                      Brandon Cimino <brandon.cimino@gmail.com>
+sub   cv25519 2024-07-22 [E] [expires: 2027-07-22]
+
+. "Exported the key to a server" 🤷‍♀️
+
+[source,powershell]
+gpg --keyserver keyserver.ubuntu.com --send-keys 🔐
+
+. Added secret keys to my Github account _(📎 This is *not* the same as https://github.com/devuri/A-Guide-to-Generating-and-Using-GPG-Keys-on-GitHub#Step%204:%20Add%20the%20GPG%20key%20to%20GitHub:~:text=Step%204%3A%20Add%20the%20GPG%20key%20to%20GitHub[Step 4: Add the GPG keys to Github])_
++
+[source,powershell]
+----
+# ⚠ This must be done from within the relevant Git repository (in my case, `~/dev/brava`)
+$gpgKeyId = "🔐"
+$gpgPassphrase = "💬"
+$gpgPublicContent = gpg --armor --export $gpgKeyId | Join-String -Separator "`n"
+gh secret set JRELEASER_GPG_PUBLIC_KEY --body $gpgPublicContent
+
+# This command will open a popup application window, where you will be required to enter your "passphrase" (💬)
+$gpgSecretContent = gpg --armor --export-secret-keys $gpgKeyId | Join-String -Separator "`n"
+gh secret set JRELEASER_GPG_SECRET_KEY --body $gpgSecretContent
+
+gh secret set JRELEASER_GPG_PASSPHRASE --body $gpgPassphrase
+
+# ⚠ I'm not sure if these will be relevant, since I created my "Sonatype" (aka Maven Central?) account by authenticating via Github directly.
+# ⚠️ Oct. 26, 2024: Don't know what this are, where I got them from, or why they include `-jira-` 🤷‍♀️
+#gh secret set JRELEASER_NEXUS2_USERNAME --body <sonatype-jira-username>
+#gh secret set JRELEASER_NEXUS2_PASSWORD --body <sonatype-jira-password>
+----
++
+[TIP]
+====
+The secrets should now show up on https://github.com/brandoncimino/brava/settings/secrets/actions as:
+
+- `JRELEASER_GPG_PASSPHRASE`
+- `JRELEASER_GPG_PUBLIC_KEY`
+- `JRELEASER_GPG_SECRET_KEY`
+
+NOTE: These are saved in my GitHub notes in Bitwarden.
+====
+
+// TODO: Where did I get all this junk in my gradle file from? What even is `JReleaser`?

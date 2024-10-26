@@ -2,6 +2,7 @@
   <code_scheme name="Project" version="173">
     <option name="LINE_SEPARATOR" value="&#10;" />
     <JavaCodeStyleSettings>
+      <option name="TEST_NAME_SUFFIX" value="Tests" />
       <option name="ANNOTATION_PARAMETER_WRAP" value="1" />
       <option name="ALIGN_MULTILINE_ANNOTATION_PARAMETERS" value="true" />
       <option name="NEW_LINE_AFTER_LPAREN_IN_ANNOTATION" value="true" />
@@ -16,6 +17,7 @@
       <option name="ENABLED" value="false" />
     </editorconfig>
     <codeStyleSettings language="JAVA">
+      <option name="RIGHT_MARGIN" value="200" />
       <option name="ALIGN_MULTILINE_PARAMETERS" value="false" />
       <option name="ALIGN_MULTILINE_RESOURCES" value="false" />
       <option name="ALIGN_MULTILINE_FOR" value="false" />
