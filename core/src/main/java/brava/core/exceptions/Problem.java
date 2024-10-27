@@ -108,16 +108,10 @@ public record Problem(
 
     /**
      * Based on my {@link #severity}, either:
-     * <table>
-     *     <tr>
-     *         <td>{@link Severity#WARNING}</td>
-     *         <td>invokes {@code logger}</td>
-     *     </tr>
-     *     <tr>
-     *         <td>{@link Severity#ERROR}</td>
-     *         <td>throws a {@link BigProblemException}</td>
-     *     </tr>
-     * </table>
+     * <ul>
+     *     <li>{@link Severity#WARNING WARNING} → invokes {@code logger}</li>
+     *     <li>{@link Severity#ERROR ERROR} → throws a {@link BigProblemException}</li>
+     * </ul>
      *
      * @param logger what to do if my {@link #severity} is {@link Severity#WARNING}
      * @throws BigProblemException if my {@link #severity} is {@link Severity#ERROR}

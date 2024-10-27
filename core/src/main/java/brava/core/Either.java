@@ -331,13 +331,13 @@ public final class Either<A, B> {
     }
 
     /**
-     * Transforms my {@link #value} into {@link Either}<{@link A2}, {@link B2}> depending on whether I {@link #hasA()} or {@link #hasB()}.
+     * Transforms my {@link #value} into {@link Either}&gt;{@link A2}, {@link B2}> depending on whether I {@link #hasA()} or {@link #hasB()}.
      *
      * @param ifA  if I {@link #hasA()}, transform it with this
      * @param ifB  if I {@link #hasB()}, transform it with this
      * @param <A2> the new output type <i>if</i> I {@link #hasA()}
      * @param <B2> the new output type <i>if</i> I {@link #hasB()}
-     * @return {@link Either}<{@link A2}, {@link B2}>
+     * @return {@link Either}&gt;{@link A2}, {@link B2}>
      * @see #handle(Function, Function)
      */
     public <A2, B2> Either<@NotNull A2, @NotNull B2> map(@NotNull Function<@NotNull A, @NotNull A2> ifA, @NotNull Function<@NotNull B, @NotNull B2> ifB) {

@@ -157,7 +157,7 @@ public final class Lazy<T> implements Unchecked.Supplier<@NotNull T> {
      * <p/>
      * If we ever decide that we don't like {@link Tuple0} because of its dependency on {@link groovy}, then alternatives include:
      * <ol>
-     *     <li><h3>{@link Optional}<{@link Void}></h3>
+     *     <li><h3>{@link Optional}&lt;{@link Void}&gt;</h3>
      *     Since {@link Void} can only ever bee {@code null}, this type only has one value,
      *     {@link Optional#empty()}. This is also consistent with {@link Lazy#ofNullable(Object)}.
      *     Mechanically, this is sound, but it's super weird looking.
@@ -169,11 +169,12 @@ public final class Lazy<T> implements Unchecked.Supplier<@NotNull T> {
      *     However, it makes the internal logic of {@link Lazy} super janky, because we now have to treat {@link Void}
      *     type parameters in a special way.
      *     It also wouldn't play nice with other null-hostile libraries.</li>
-     *     <li><h3>Use {@link Class}<{@link Void}></h3>
+     *     <li><h3>Use {@link Class}&lt;{@link Void}&gt;</h3>
      *     This will <i>(<a href="https://stackoverflow.com/questions/63336082/is-a-java-class-instance-singleton">theoretically</a>)</i>
      *     always refer to the same singleton instance, {@link Void#TYPE}.
      *     It's just about as weird as the {@link Optional} version, though.
-     *     <b>UPDATE July 19, 2024:</b> Actually, it's probably even weirder.gvb
+     *     <br/>
+     *     <b>UPDATE July 19, 2024:</b> Actually, it's probably even weirder.
      *     </li>
      *     <li><h3>Create our own <a href="https://en.wikipedia.org/wiki/Unit_type">"unit" type</a></h3>
      *     This is the last resort.</li>
