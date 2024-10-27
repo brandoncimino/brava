@@ -11,7 +11,6 @@ import com.google.common.collect.Streams;
 import com.google.common.primitives.Primitives;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.VisibleForTesting;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -74,57 +73,7 @@ class EitherModuleHelpers {
         );
     }
 
-    /**
-     * Attempts to decide which {@link JavaType} to deserialize to by comparing the number of {@link JsonNode#fieldNames()} that match their {@link BeanDescription#findProperties()} <i>(by {@link #hasNameOrAlias(DeserializationConfig, BeanPropertyDefinition, String) name or alias})</i>.
-     * <br/>
-     * In the event that both types match the same number of {@link JsonNode#fieldNames()}, then there's no <i>immediately</i> clear preference.
-     * <br/>
-     * <ul>
-     *     <li>If they match different sets of {@link JsonNode#fieldNames()}, then we're out of luck.</li>
-     *     <li>However, if they match the <i>same</i> {@link JsonNode#fieldNames()}, then we can recur into those fields to see if <i>that field</i> has a preference between its two possible types.</li>
-     * </ul>
-     *
-     * <i>📎 This recursion is the advantage that this method has over {@link com.fasterxml.jackson.annotation.JsonTypeInfo.Id#DEDUCTION}.</i>
-     * <hr/>
-     *
-     * <h1>Example</h1>
-     * <p>
-     * Take the following classes:
-     * <pre>{@code
-     * public record SuccessResponse(SuccessDetails details);
-     * public record ErrorResponse(ErrorDetails details);
-     *
-     * public record SuccessDetails(String message, UUID id);
-     * public record ErrorDetails(String message, String code);
-     * }</pre>
-     * And this JSON:
-     * <pre>{@code
-     * {
-     *    "details": {
-     *        "message": "badness",
-     *        "code": "BAD-1"
-     *    }
-     * }
-     * }</pre>
-     * First we ask the question: "Which of you has more properties that match one of the JSON's fields?"
-     * <p/>
-     * For both A and B, {@link EitherModuleHelpers#getMatchingProperties(DeserializationConfig, JavaType, Iterator)} would return 1 field: {@code "details"}.
-     * That's not enough to make a decision, though.
-     * <p/>
-     * Then we ask the {@code "details"} field a question: "Of your two possible types 🅰 and 🅱, which do you prefer?"
-     * <p/>
-     * The {@code "value"} field has 2 fields inside it, {@code "message"} and {@code "error"}.
-     * That's 1 match for {@code SuccessDetails} and 2 for {@code ErrorDetails}, so the field chooses {@code Error} and votes for 🅱.
-     * <p/>
-     * We then tally up the preferences, and find that {@code B} won.
-     *
-     * @param config   the {@link DeserializationConfig} being used
-     * @param jsonNode the JSON node that we are trying to deserialize
-     * @param a        option {@link Which#A}
-     * @param b        option {@link Which#B}
-     * @return {@link Which}, if any, was preferred by more of the {@link JsonNode#fieldNames()}, if we were able to determine that
-     */
-    @VisibleForTesting
+
     public static Optional<Which> hasMoreMatchingProperties(
         DeserializationConfig config,
         JsonNode jsonNode,
