@@ -2,6 +2,7 @@ package com.fasterxml.jackson.datatype.brava;
 
 
 import brava.core.Either;
+import brava.core.Unchecked;
 import brava.core.Which;
 import brava.core.collections.Combinatorial;
 import brava.core.tuples.Tuple2;
@@ -17,6 +18,7 @@ import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.datatype.brava.EitherTestData.EitherInfo;
 import com.fasterxml.jackson.datatype.brava.ExampleTypes.HasEither;
+import com.google.common.base.Preconditions;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.assertj.core.api.SoftAssertions;
@@ -44,22 +46,22 @@ public final class EitherModuleTests {
     @Contract("-> new")
     private static JsonMapper createMapper() {
         return JsonMapper.builder()
-              .addModule(new EitherModule())
-              .configure(JsonReadFeature.ALLOW_MISSING_VALUES, true)
-              .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-              .build();
+            .addModule(new EitherModule())
+            .configure(JsonReadFeature.ALLOW_MISSING_VALUES, true)
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+            .build();
     }
 
     public static Stream<EitherScenario<?, ?>> provideSupportedTypes() {
         var eitherInfos = Combinatorial.orderedPairs(TypedValue.supportedTypes())
-              .map(it -> EitherInfo.of(it.a(), it.b()))
-              .toList();
+            .map(it -> EitherInfo.of(it.a(), it.b()))
+            .toList();
 
         return Combinatorial.cartesianProduct(
-                    eitherInfos,
-                    EnumSet.allOf(Which.class)
-              )
-              .map(EitherScenario::of);
+                eitherInfos,
+                EnumSet.allOf(Which.class)
+            )
+            .map(EitherScenario::of);
     }
 
     @ParameterizedTest
@@ -73,8 +75,8 @@ public final class EitherModuleTests {
         var eitherJson = mapper.writeValueAsString(either);
 
         Assertions.assertThat(eitherJson)
-              .as("the %s json is the same as the underlying %s json", scenario.info.eitherType(), scenario.info.get(scenario.which).javaType())
-              .isEqualTo(valueJson);
+            .as("the %s json is the same as the underlying %s json", scenario.info.eitherType(), scenario.info.get(scenario.which).javaType())
+            .isEqualTo(valueJson);
     }
 
     @Test
@@ -84,9 +86,9 @@ public final class EitherModuleTests {
         var json = mapper.writeValueAsString(uuid);
 
         Assertions.assertThatCode(() -> mapper.readValue(
-              json,
-              new TypeReference<Either<Integer, Float>>() {
-              }
+            json,
+            new TypeReference<Either<Integer, Float>>() {
+            }
         )).isInstanceOf(MismatchedInputException.class);
     }
 
@@ -94,8 +96,8 @@ public final class EitherModuleTests {
     void givenAmbiguousJson_whenPropertyHasAnnotatedPreference_thenAnnotatedPreferenceIsUsed() throws Exception {
         @SuppressWarnings("Convert2Diamond" /* Just for safety, 'cus we're dealing with lots of type nonsense here */)
         var value = new ExampleTypes.HasAnnotatedPreference<BigInteger, BigDecimal>(
-              Either.ofA(BigInteger.TEN),
-              Either.ofB(BigDecimal.TEN)
+            Either.ofA(BigInteger.TEN),
+            Either.ofB(BigDecimal.TEN)
         );
 
         var mapper = createMapper();
@@ -105,13 +107,13 @@ public final class EitherModuleTests {
         });
 
         Assertions.assertThat(fromJson)
-              .isEqualTo(value);
+            .isEqualTo(value);
     }
 
     @Test
     void givenAmbiguousJson_whenPropertyHasAnnotatedPreference_thenAnnotatedPreferenceIsUsed_RECORD() throws Exception {
         @SuppressWarnings("Convert2Diamond" /* Just for safety, 'cus we're dealing with lots of type nonsense here */)
-        var value = new ExampleTypes.HasAnnotatedPreference.Record<BigInteger, BigDecimal>(
+        var value = new ExampleTypes.HasAnnotatedPreference.HasAnnotatedPreference_Record<BigInteger, BigDecimal>(
             Either.ofA(BigInteger.TEN),
             Either.ofB(BigDecimal.TEN)
         );
@@ -119,7 +121,7 @@ public final class EitherModuleTests {
         var mapper = createMapper();
         var json   = mapper.writeValueAsString(value);
 
-        var fromJson = mapper.readValue(json, new TypeReference<ExampleTypes.HasAnnotatedPreference.Record<BigInteger, BigDecimal>>() {
+        var fromJson = mapper.readValue(json, new TypeReference<ExampleTypes.HasAnnotatedPreference.HasAnnotatedPreference_Record<BigInteger, BigDecimal>>() {
         });
 
         Assertions.assertThat(fromJson)
@@ -128,7 +130,7 @@ public final class EitherModuleTests {
 
     public static Stream<EitherInfo<?, ?>> provideUnambiguousTypes_noWhich() {
         return Combinatorial.orderedPairs(TypedValue.unambiguousTypes())
-              .map(it -> EitherInfo.of(it.a(), it.b()));
+            .map(it -> EitherInfo.of(it.a(), it.b()));
     }
 
     @ParameterizedTest
@@ -146,11 +148,11 @@ public final class EitherModuleTests {
 
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(fromJson)
-                  .first()
+                .first()
                 .isEqualTo(Either.ofA(eitherInfo.a().value()));
 
             softly.assertThat(fromJson)
-                  .last()
+                .last()
                 .isEqualTo(Either.ofB(eitherInfo.b().value()));
         });
     }
@@ -159,23 +161,23 @@ public final class EitherModuleTests {
 
     public static Stream<Arguments> provideUnsupportedTypes() {
         return Combinatorial.cartesianProduct(
-                    TypedValue.unsupportedTypes(),
-                    TypedValue.unambiguousTypes(),
-                    EnumSet.allOf(Which.class)
-              )
-              .map(it -> Arguments.of(it.a(), it.b(), it.c()));
+                TypedValue.unsupportedTypes(),
+                TypedValue.unambiguousTypes(),
+                EnumSet.allOf(Which.class)
+            )
+            .map(it -> Arguments.of(it.a(), it.b(), it.c()));
     }
 
     @ParameterizedTest
     @MethodSource("provideUnsupportedTypes")
     void givenMissingTypeIsUnsupported_whenDeserializedToEither_thenDeserializationFails(
-          TypedValue<?> unsupportedType,
-          TypedValue<?> supportedType,
-          Which whichIsSupported
+        TypedValue<?> unsupportedType,
+        TypedValue<?> supportedType,
+        Which whichIsSupported
     ) throws Exception {
         var mapper = createMapper();
         var value = supportedType.value();
-        var json = mapper.writeValueAsString(value);
+        var json  = mapper.writeValueAsString(value);
 
         // Parameter validation
 
@@ -190,9 +192,9 @@ public final class EitherModuleTests {
 
         var result = Either.resultOf(() -> mapper.readValue(json, eitherType));
         Assertions.assertThat(result)
-              .as("Json %s -> Either<%s, %s>", json, aType.javaType().getRawClass().getSimpleName(), bType.javaType().getRawClass().getSimpleName())
-              .extracting(Either::tryGetB, InstanceOfAssertFactories.OPTIONAL)
-              .containsInstanceOf(InvalidDefinitionException.class);
+            .as("Json %s -> Either<%s, %s>", json, aType.javaType().getRawClass().getSimpleName(), bType.javaType().getRawClass().getSimpleName())
+            .extracting(Either::tryGetB, InstanceOfAssertFactories.OPTIONAL)
+            .containsInstanceOf(InvalidDefinitionException.class);
     }
 
     //endregion
@@ -201,11 +203,11 @@ public final class EitherModuleTests {
 
     public static Stream<EitherScenario<?, ?>> provideUnambiguousTypes() {
         var eitherInfos = Combinatorial.orderedPairs(TypedValue.unambiguousTypes())
-              .map(it -> EitherInfo.of(it.a(), it.b()))
-              .toList();
+            .map(it -> EitherInfo.of(it.a(), it.b()))
+            .toList();
 
         return Combinatorial.cartesianProduct(eitherInfos, EnumSet.allOf(Which.class))
-              .map(EitherScenario::of);
+            .map(EitherScenario::of);
     }
 
     @ParameterizedTest
@@ -213,12 +215,87 @@ public final class EitherModuleTests {
     void givenUnambiguousJson_whenDeserializedToEither_thenCorrectEitherIsCreated(EitherScenario<?, ?> scenario) throws Exception {
         var mapper = createMapper();
         var value = scenario.info.get(scenario.which).value();
-        var json = mapper.writeValueAsString(value);
+        var json  = mapper.writeValueAsString(value);
 
         Either<?, ?> actual = mapper.readValue(json, scenario.info.eitherType());
         Assertions.assertThat(actual)
-              .isEqualTo(scenario.info.createEither(scenario.which));
+            .isEqualTo(scenario.info.createEither(scenario.which));
     }
+
+    private static void assertAmbiguousJsonToEither(
+        TypedValue<?> preferredType,
+        TypedValue<?> otherType
+    ) {
+        var mapper = createMapper();
+        var json   = Unchecked.get(() -> mapper.writeValueAsString(preferredType.value()));
+
+        var toPreferred = Either.resultOf(() -> mapper.readValue(json, preferredType.javaType()));
+        var toOther     = Either.resultOf(() -> mapper.readValue(json, otherType.javaType()));
+
+        Preconditions.checkArgument(
+            toPreferred.hasA() && toOther.hasA(),
+            """
+                The JSON must be deserializable to BOTH types!
+                  🅰 %s
+                  🅱 %s
+                  JSON
+                  ----
+                  %s
+                  ----
+                """,
+            toPreferred,
+            toOther,
+            json
+        );
+
+        var expectedValue = toPreferred.getA();
+
+        Either<?, ?> aPreferred = Unchecked.get(() -> mapper.readValue(json, EitherInfo.of(preferredType, otherType).eitherType()));
+        Either<?, ?> bPreferred = Unchecked.get(() -> mapper.readValue(json, EitherInfo.of(otherType, preferredType).eitherType()));
+
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(aPreferred)
+                .as("%s is preferred over %s (while in 🅰️ position)", preferredType, otherType)
+                .satisfies(it -> EitherAssertions.validate(
+                    it,
+                    expectedValue,
+                    Which.A
+                ));
+
+            softly.assertThat(bPreferred)
+                .as("%s is preferred over %s (while in 🅱️ position)", preferredType, otherType)
+                .satisfies(it -> EitherAssertions.validate(
+                    it,
+                    expectedValue,
+                    Which.B
+                ));
+        });
+    }
+
+    @Test
+    void givenAmbiguousJson_preferPrimitiveType() {
+        assertAmbiguousJsonToEither(
+            TypedValue.integer,
+            ExampleTypes.AsInt.typedValue
+        );
+    }
+
+    @Test
+    void givenAmbiguousJson_preferStrictSubtype() {
+        assertAmbiguousJsonToEither(
+            ExampleTypes.Child.typedValue,
+            ExampleTypes.Parent.typedValue
+        );
+    }
+
+    @Test
+    void givenAmbiguousJson_preferTypeWithMoreMatchingProperties() {
+        assertAmbiguousJsonToEither(
+            ExampleTypes.FirstAndLastName.typedValue,
+            ExampleTypes.FirstNameOnly.typedValue
+        );
+    }
+
     //endregion
 
 
@@ -233,20 +310,20 @@ public final class EitherModuleTests {
         var uuid = UUID.randomUUID();
 
         var hasEitherType = which == Which.A
-              ? new TypeReference<HasEither<UUID, Integer>>() {
+                            ? new TypeReference<HasEither<UUID, Integer>>() {
         }
-              : new TypeReference<HasEither<Integer, UUID>>() {
+                            : new TypeReference<HasEither<Integer, UUID>>() {
         };
 
-        var either = EitherModuleHelpers.createEither(which, uuid);
-        var hasEither = new HasEither<>(either);
-        var json = mapper.writeValueAsString(hasEither);
-        HasEither<?, ?> fromJson = mapper.readValue(json, hasEitherType);
+        var             either    = EitherModuleHelpers.createEither(which, uuid);
+        var             hasEither = new HasEither<>(either);
+        var             json      = mapper.writeValueAsString(hasEither);
+        HasEither<?, ?> fromJson  = mapper.readValue(json, hasEitherType);
         Assertions.assertThat(fromJson)
-              .hasSameClassAs(hasEither)
-              .isEqualTo(hasEither)
+            .hasSameClassAs(hasEither)
+            .isEqualTo(hasEither)
             .extracting(ExampleTypes.HasEither::getValue)
-              .satisfies(it -> EitherAssertions.validate(it, uuid, which));
+            .satisfies(it -> EitherAssertions.validate(it, uuid, which));
     }
 
     @Test
@@ -254,12 +331,12 @@ public final class EitherModuleTests {
         // Make sure the file actually exists
         var magicalResourceFilePath = "META-INF/services/com.fasterxml.jackson.databind.Module";
         Thread.currentThread().getContextClassLoader().resources(magicalResourceFilePath)
-              .findAny()
-              .orElseThrow();
+            .findAny()
+            .orElseThrow();
 
         var modules = MapperBuilder.findModules();
         Assertions.assertThat(modules)
-              .satisfiesOnlyOnce(it -> Assertions.assertThat(it).isInstanceOf(EitherModule.class));
+            .satisfiesOnlyOnce(it -> Assertions.assertThat(it).isInstanceOf(EitherModule.class));
     }
 
     //region deduceByProperties
@@ -268,51 +345,52 @@ public final class EitherModuleTests {
         var types = List.of(EitherTestData.SuccessResponse.TYPED_VALUE, EitherTestData.ErrorResponse.TYPED_VALUE);
 
         var eitherInfos = Combinatorial.orderedPairs(types)
-              .map(it -> EitherInfo.of(it.a(), it.b()))
-              .toList();
+            .map(it -> EitherInfo.of(it.a(), it.b()))
+            .toList();
 
         return Combinatorial.cartesianProduct(
-                    eitherInfos,
-                    EnumSet.allOf(Which.class)
-              )
-              .map(EitherScenario::of);
+                eitherInfos,
+                EnumSet.allOf(Which.class)
+            )
+            .map(EitherScenario::of);
     }
 
     @ParameterizedTest
     @MethodSource("provideDeducibleByProperties")
     void deduceByPropertiesIsRecursiveTest(EitherScenario<?, ?> scenario) throws Exception {
         var mapper = JsonMapper.builder()
-              .configure(JsonReadFeature.ALLOW_MISSING_VALUES, true)
-              .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-              .build();
+            .configure(JsonReadFeature.ALLOW_MISSING_VALUES, true)
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+            .build();
 
         var value = scenario.info.get(scenario.which).value();
-        var json = mapper.writeValueAsString(value);
+        var json  = mapper.writeValueAsString(value);
         var parentType = EitherTestData.requireSameParent(scenario.info.a().javaType(), scenario.info.b().javaType());
 
         Assertions.assertThatCode(() -> mapper.readValue(json, parentType))
-              .as("""
-                          Jackson should NOT be able to deduce betwixt the 2 children of %s:
-                            🅰 %s
-                            🅱 %s
-                          """,
-                    parentType,
-                  scenario.info.a().javaType(),
-                  scenario.info.b().javaType()
-              )
-              .isInstanceOf(InvalidDefinitionException.class);
+            .as(
+                """
+                    Jackson should NOT be able to deduce betwixt the 2 children of %s:
+                      🅰 %s
+                      🅱 %s
+                    """,
+                parentType,
+                scenario.info.a().javaType(),
+                scenario.info.b().javaType()
+            )
+            .isInstanceOf(InvalidDefinitionException.class);
 
         var jsonNode = mapper.readTree(json);
 
         var deduced = EitherModuleHelpers.hasMoreMatchingProperties(
-              mapper.getDeserializationConfig(),
-              jsonNode,
+            mapper.getDeserializationConfig(),
+            jsonNode,
             scenario.info.a().javaType(),
             scenario.info.b().javaType()
         );
 
         Assertions.assertThat(deduced)
-              .contains(scenario.which == Which.A ? Which.A : Which.B);
+            .contains(scenario.which == Which.A ? Which.A : Which.B);
     }
 
     //endregion

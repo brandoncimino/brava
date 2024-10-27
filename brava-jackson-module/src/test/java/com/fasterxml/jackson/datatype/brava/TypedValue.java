@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.exc.InvalidDefinitionException;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Streams;
 
 import java.io.UncheckedIOException;
 import java.math.BigInteger;
@@ -21,6 +22,8 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
+
+import static com.fasterxml.jackson.datatype.brava.ExampleTypes.*;
 
 /**
  * Groups together a {@link #value} and a {@link TypeReference} for it.
@@ -117,8 +120,24 @@ public record TypedValue<T>(@JsonValue T value, TypeReference<T> typeReference, 
      */
     public static ImmutableList<TypedValue<?>> unambiguousTypes() {
         return ImmutableList.of(
-            uuid, ExampleTypes.HasUUID.typedValue, list_uuid, integer, list_integer, ExampleTypes.HasInt.typedValue, bigInteger, ExampleTypes.HasValue.typedValue_integer,
-            ExampleTypes.HasValue.typedValue_uuid
+            uuid,
+            HasUUID.typedValue,
+            list_uuid,
+            integer,
+            list_integer,
+            HasInt.typedValue,
+            bigInteger,
+            HasValue.typedValue_integer,
+            HasValue.typedValue_uuid
+        );
+    }
+
+    public static ImmutableList<TypedValue<? extends Record>> recordTypes() {
+        return ImmutableList.of(
+            HasUUID.HasUUID_Record.typedValue,
+            HasInt.HasInt_Record.typedValue,
+            HasValue.HasValue_Record.typedValue_integer,
+            HasValue.HasValue_Record.typedValue_uuid
         );
     }
 
@@ -126,7 +145,11 @@ public record TypedValue<T>(@JsonValue T value, TypeReference<T> typeReference, 
      * @return a list of {@link TypedValue}s that can be both serialized and deserialized by {@link JsonMapper} <b><i>by default</i></b> <i>(i.e. without any {@link com.fasterxml.jackson.core.util.JacksonFeature}s or {@link com.fasterxml.jackson.databind.Module}s)</i>
      */
     public static ImmutableList<TypedValue<?>> supportedTypes() {
-        return Stream.concat(unambiguousTypes().stream(), Stream.of(double_wrapper, string, map_string_integer)).collect(ImmutableList.toImmutableList());
+        return Streams.concat(
+            unambiguousTypes().stream(),
+            Stream.of(double_wrapper, string, map_string_integer),
+            recordTypes().stream()
+        ).collect(ImmutableList.toImmutableList());
     }
 
     /**
@@ -146,8 +169,8 @@ public record TypedValue<T>(@JsonValue T value, TypeReference<T> typeReference, 
                     InvalidDefinitionException.class.getSimpleName()
                 )
             ),
-            ExampleTypes.IgnoredConstructor.typedValue,
-            ExampleTypes.OnlyMultiArgConstructor.typedValue,
+            IgnoredConstructor.typedValue,
+            OnlyMultiArgConstructor.typedValue,
             of(Function.identity(), new TypeReference<>() { }, "Jackson can't handle interfaces without you telling it a concrete implementation to use")
         );
     }

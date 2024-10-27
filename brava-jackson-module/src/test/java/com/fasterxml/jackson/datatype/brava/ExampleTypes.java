@@ -3,6 +3,7 @@ package com.fasterxml.jackson.datatype.brava;
 import brava.core.Either;
 import brava.core.Which;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.datatype.brava.EitherModule.Preference;
 import lombok.*;
@@ -21,7 +22,7 @@ public class ExampleTypes {
     public static class HasEither<A, B> {
         private final Either<A, B> value;
 
-        public record Record<A, B>(Either<A, B> value) { }
+        public record HasEither_Record<A, B>(Either<A, B> value) { }
     }
 
     @AllArgsConstructor
@@ -34,9 +35,13 @@ public class ExampleTypes {
 
         public static final TypedValue<HasInt> typedValue = TypedValue.of(new HasInt(100), new TypeReference<>() { });
 
-        public record Record(Integer intValue) {
-            public static final TypedValue<Record> typedValue = TypedValue.of(new Record(101), new TypeReference<>() { });
+        public record HasInt_Record(Integer intValue) {
+            public static final TypedValue<HasInt_Record> typedValue = TypedValue.of(new HasInt_Record(101), new TypeReference<>() { });
         }
+    }
+
+    public record AsInt(@JsonValue int intValue) {
+        public static final TypedValue<AsInt> typedValue = TypedValue.of(new AsInt(37), new TypeReference<AsInt>() { });
     }
 
     @AllArgsConstructor
@@ -50,10 +55,10 @@ public class ExampleTypes {
         public static final TypedValue<HasValue<Integer>> typedValue_integer = TypedValue.of(new HasValue<>(99), new TypeReference<>() { });
         public static final TypedValue<HasValue<UUID>>    typedValue_uuid    = TypedValue.of(new HasValue<>(UUID.randomUUID()), new TypeReference<>() { });
 
-        public record Record<T>(T value) {
-            public static final TypedValue<Record<Integer>> typedValue_integer = TypedValue.of(new Record<>(100), new TypeReference<>() { });
+        public record HasValue_Record<T>(T value) {
+            public static final TypedValue<HasValue_Record<Integer>> typedValue_integer = TypedValue.of(new HasValue_Record<>(100), new TypeReference<>() { });
 
-            public static final TypedValue<Record<UUID>> typedValue_uuid = TypedValue.of(new Record<>(UUID.randomUUID()), new TypeReference<>() { });
+            public static final TypedValue<HasValue_Record<UUID>> typedValue_uuid = TypedValue.of(new HasValue_Record<>(UUID.randomUUID()), new TypeReference<>() { });
         }
     }
 
@@ -67,8 +72,8 @@ public class ExampleTypes {
 
         public static final TypedValue<HasUUID> typedValue = TypedValue.of(new HasUUID(UUID.randomUUID()), new TypeReference<>() { });
 
-        public record Record(UUID uuidValue) {
-            public static final TypedValue<Record> typedValue = TypedValue.of(new Record(UUID.randomUUID()), new TypeReference<>() { });
+        public record HasUUID_Record(UUID uuidValue) {
+            public static final TypedValue<HasUUID_Record> typedValue = TypedValue.of(new HasUUID_Record(UUID.randomUUID()), new TypeReference<>() { });
         }
     }
 
@@ -120,7 +125,7 @@ public class ExampleTypes {
         @Preference(Which.B)
         private final Either<A, B> prefersB;
 
-        public record Record<A, B>(
+        public record HasAnnotatedPreference_Record<A, B>(
             @Preference(Which.A)
             Either<A, B> prefersA,
 
@@ -128,4 +133,67 @@ public class ExampleTypes {
             Either<A, B> prefersB
         ) { }
     }
+
+    //region Inheritance
+
+    @AllArgsConstructor
+    @NoArgsConstructor(force = true)
+    @Getter
+    @ToString
+    @EqualsAndHashCode
+    public static class Grandparent {
+        private final String nickname;
+
+        public static final TypedValue<Grandparent> typedValue = TypedValue.of(new Grandparent("granny"), new TypeReference<>() { });
+    }
+
+    @NoArgsConstructor(force = true)
+    @Getter
+    @ToString
+    @EqualsAndHashCode(callSuper = true)
+    public static class Parent extends Grandparent {
+        public Parent(String nickname) {
+            super(nickname);
+        }
+
+        public static final TypedValue<Parent> typedValue = TypedValue.of(new Parent("a parent"), new TypeReference<>() { });
+    }
+
+    @NoArgsConstructor(force = true)
+    @Getter
+    @ToString
+    @EqualsAndHashCode(callSuper = true)
+    public static class Child extends Parent {
+        public Child(String nickname) {
+            super(nickname);
+        }
+
+        public static final TypedValue<Child> typedValue = TypedValue.of(new Child("cool kid"), new TypeReference<>() { });
+    }
+
+    @NoArgsConstructor(force = true)
+    @Getter
+    @ToString
+    @EqualsAndHashCode(callSuper = true)
+    public static class Stepchild extends Parent {
+        public Stepchild(String nickname) {
+            super(nickname);
+        }
+
+        public static final TypedValue<Stepchild> typedValue = TypedValue.of(new Stepchild("redhead"), new TypeReference<>() { });
+    }
+
+    //endregion
+
+    //region Deducible by properties
+
+    public record FirstNameOnly(String firstName) {
+        public static final TypedValue<FirstNameOnly> typedValue = TypedValue.of(new FirstNameOnly("Darktholomew"), new TypeReference<>() { });
+    }
+
+    public record FirstAndLastName(String firstName, String lastName) {
+        public static final TypedValue<FirstAndLastName> typedValue = TypedValue.of(new FirstAndLastName("Jimbo", "Nice"), new TypeReference<>() { });
+    }
+
+    //endregion
 }

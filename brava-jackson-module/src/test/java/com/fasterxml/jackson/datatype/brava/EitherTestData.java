@@ -2,6 +2,7 @@ package com.fasterxml.jackson.datatype.brava;
 
 import brava.core.Either;
 import brava.core.Which;
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -34,7 +35,11 @@ public final class EitherTestData {
         }
 
         public JavaType eitherType() {
-            return TypeFactory.defaultInstance().constructParametricType(Either.class, a.javaType(), b.javaType());
+            return constructEitherType(a.javaType(), b.javaType());
+        }
+
+        public static JavaType constructEitherType(JavaType aType, JavaType bType) {
+            return TypeFactory.defaultInstance().constructParametricType(Either.class, aType, bType);
         }
 
         public TypedValue<?> get(Which which) {
@@ -117,13 +122,18 @@ public final class EitherTestData {
     public static void requireTypeSupport(boolean shouldBeSupported, JsonMapper mapper, String json, JavaType type) {
         var result = Either.resultOf(() -> mapper.readValue(json, type));
 
-        result.tryGetB().filter(MismatchedInputException.class::isInstance).ifPresent(e -> {
-            var message = String.format(
-                "Usually, when you deserialize to a type without a proper 'Creator' like %s, you get an %s. However, if the JSON you are deserializing is an array, you instead get a %s 🤷‍♀️ This breaks the scenario here, so we're skipping it.",
-                type, InvalidDefinitionException.class.getSimpleName(), MismatchedInputException.class.getSimpleName()
-            );
-            Assumptions.abort(message);
-        });
+        result.tryGetB()
+            .filter(MismatchedInputException.class::isInstance)
+            .ifPresent(e -> {
+                var message = String.format(
+                    "Usually, when you deserialize to a type without a proper '%s' like %s, you get an %s. However, if the JSON you are deserializing is an array, you instead get a %s 🤷‍♀️ This breaks the scenario here, so we're skipping it.",
+                    JsonCreator.class.getSimpleName(),
+                    type,
+                    InvalidDefinitionException.class.getSimpleName(),
+                    MismatchedInputException.class.getSimpleName()
+                );
+                Assumptions.abort(message);
+            });
 
 
         var isNotSupported = result.tryGetB().map(InvalidDefinitionException.class::isInstance).orElse(false);
