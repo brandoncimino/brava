@@ -1,22 +1,25 @@
-import org.jreleaser.model.Active
-
+// 📎 All of these "blocks" are actually method calls with a single lambda parameter.
 plugins {
+    // 📎 These lambdas have a secret parameter, which can be referred to as `this`.
+    //    Everything inside of lambda is actually called as though it were `this.{x}`.
     id("java-library")
     id("java-test-fixtures")
     id("maven-publish")
-    id("org.jreleaser").version("1.13.1")
+    // TODO: Inclusion of `jreleaser` seems to cause the https://docs.gradle.org/8.5/userguide/upgrading_version_8.html#deprecated_access_to_conventions warning. Need to look up and see if this is a known issue, which it better be if `jrleaser` is a real thing.
+    id("org.jreleaser").version("1.14.0")
     id("signing")
 }
+
 
 /**
  * 📎 On the "Maven Central" website (which is actually called "sonatype"?),
  * the `groupId` is referred to as the `namespace`: https://central.sonatype.com/publishing/namespaces
  */
-val mavenGroupId = "io.github.brandoncimino"
+val githubUsername = "brandoncimino"
+val mavenGroupId = "io.github.$githubUsername"
 val mavenArtifactId = "brave-core"
 val mavenDescription = "Brandon's generic Java utilities."
 
-val githubUsername = "brandoncimino"
 val githubProfile = "https://github.com/$githubUsername"
 val githubProject = "https://github.com/$githubUsername/brava"
 
@@ -32,12 +35,6 @@ java {
     withSourcesJar()
 }
 
-tasks.jar {
-    enabled = true
-    // Remove `plain` postfix from jar file name
-    archiveClassifier = ""
-}
-
 dependencies {
     implementation(libs.jetbrains.annotations)
     compileOnly(libs.jackson.annotations)
@@ -45,14 +42,40 @@ dependencies {
 
     testImplementation(platform(libs.junit.bom))
     testImplementation("org.junit.jupiter:junit-jupiter")
-    testImplementation(libs.assertj)
+    testImplementation(platform(libs.assertj.bom))
+    testImplementation("org.assertj:assertj-core")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
-    testFixturesImplementation(libs.assertj)
+    testFixturesImplementation(platform(libs.assertj.bom))
+    testFixturesImplementation("org.assertj:assertj-core")
+}
+ 
+tasks.jar {
+    enabled = true
+    // Remove `plain` postfix from jar file name
+    archiveClassifier = ""
 }
 
 tasks.test {
     useJUnitPlatform()
+}
+
+tasks.javadoc {
+    // This tells the "javadoclet" to allow the tags introduced in https://openjdk.org/jeps/8068562. 
+    // Source: https://gist.github.com/claudioaltamura/aba1f6506a53b9f5499fd507abd572df
+    (options as StandardJavadocDocletOptions).tags(
+        "apiNote:a:API Note:",
+        "implSpec:a:Implementation Requirements:",
+        "implNote:a:Implementation Note:"
+    )
+
+    // This tells the "javadoclet" to stop failing my build if it detects and warnings.
+    // Source: https://stackoverflow.com/a/73930431/18494923
+    // 📎 In a perfect world, we'd be able to just fix these issues. 
+    //    However, some of these warnings are just objectively incorrect, the most notable being
+    //    the `reference not found` warning issued when you use a type parameter in a `@link`, such as `{@link Function#apply(IN)}`.
+    // 📎 Some people reference another option, `quiet` / `-quiet`, but it doesn't seem to do anything.
+    (options as CoreJavadocOptions).addBooleanOption("Xdoclint:none", true);
 }
 
 publishing {
@@ -106,16 +129,17 @@ publishing {
 
 jreleaser {
     signing {
-        active = Active.ALWAYS
+        active = org.jreleaser.model.Active.ALWAYS
         armored = true
     }
     deploy {
         maven {
             nexus2 {
                 // ⚠ The call to `create()` was missing from the official documentation on https://jreleaser.org/guide/latest/examples/maven/maven-central.html#_gradle
+                //  🤔 This may be because the documentation uses Groovy, not Kotlin, and both of those like to secretly call methods
                 // I pulled it from: https://dev.to/tschuehly/how-to-publish-a-kotlinjava-spring-boot-library-with-gradle-to-maven-central-complete-guide-402a#52-configure-jreleaser-maven-plugin
                 create("maven-central") {
-                    active = Active.ALWAYS
+                    active = org.jreleaser.model.Active.ALWAYS
                     url = "https://s01.oss.sonatype.org/service/local"
                     // 📎 `closeRepository` and `releaseRepository` seem both to be related to "release versions" as opposed to "snapshot versions".
                     closeRepository = false
