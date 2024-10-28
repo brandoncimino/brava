@@ -128,6 +128,7 @@ publishing {
 }
 
 jreleaser {
+    gitRootSearch = true
     signing {
         active = org.jreleaser.model.Active.ALWAYS
         armored = true
