@@ -14,7 +14,7 @@ jobs:
       - name: Run chmod to make gradlew executable
         run: chmod +x ./gradlew
       - name: Publish package to local staging directory
-        run: ./gradlew :publish
+        run: ./gradlew publish
       - name: Publish package to maven central
         env:
           JRELEASER_GPG_PASSPHRASE: ${{ secrets.JRELEASER_GPG_PASSPHRASE }}
