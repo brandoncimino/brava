@@ -49,7 +49,7 @@ dependencies {
     testFixturesImplementation(platform(libs.assertj.bom))
     testFixturesImplementation("org.assertj:assertj-core")
 }
- 
+
 tasks.jar {
     enabled = true
     // Remove `plain` postfix from jar file name
@@ -136,9 +136,11 @@ jreleaser {
     deploy {
         maven {
             mavenCentral {
-                this["sonatype"].active = org.jreleaser.model.Active.ALWAYS
-                this["sonatype"].url = "https://central.sonatype.com/api/v1/publisher"
-                this["sonatype"].stagingRepository("target/staging-deploy")
+                create("sonatype") {
+                    active = org.jreleaser.model.Active.ALWAYS
+                    url = "https://central.sonatype.com/api/v1/publisher"
+                    stagingRepository("target/staging-deploy")
+                }
             }
         }
     }
