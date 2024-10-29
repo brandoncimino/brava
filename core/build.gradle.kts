@@ -25,6 +25,7 @@ val githubProject = "https://github.com/$githubUsername/brava"
 
 group = "brava"
 version = "1.0-SNAPSHOT"
+project.
 
 repositories {
     mavenCentral()
@@ -129,6 +130,7 @@ publishing {
 
 jreleaser {
     gitRootSearch = true
+    project.copyright = "Brandon Cimino"
     signing {
         active = org.jreleaser.model.Active.ALWAYS
         armored = true
