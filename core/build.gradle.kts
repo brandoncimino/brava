@@ -135,18 +135,10 @@ jreleaser {
     }
     deploy {
         maven {
-            nexus2 {
-                // ⚠ The call to `create()` was missing from the official documentation on https://jreleaser.org/guide/latest/examples/maven/maven-central.html#_gradle
-                //  🤔 This may be because the documentation uses Groovy, not Kotlin, and both of those like to secretly call methods
-                // I pulled it from: https://dev.to/tschuehly/how-to-publish-a-kotlinjava-spring-boot-library-with-gradle-to-maven-central-complete-guide-402a#52-configure-jreleaser-maven-plugin
-                create("maven-central") {
-                    active = org.jreleaser.model.Active.ALWAYS
-                    url = "https://s01.oss.sonatype.org/service/local"
-                    // 📎 `closeRepository` and `releaseRepository` seem both to be related to "release versions" as opposed to "snapshot versions".
-                    closeRepository = false
-                    releaseRepository = false
-                    stagingRepositories.add("build/staging-deploy")
-                }
+            mavenCentral {
+                this["sonatype"].active = org.jreleaser.model.Active.ALWAYS
+                this["sonatype"].url = "https://central.sonatype.com/api/v1/publisher"
+                this["sonatype"].stagingRepository("target/staging-deploy")
             }
         }
     }
