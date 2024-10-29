@@ -21,4 +21,4 @@ jobs:
           JRELEASER_GPG_SECRET_KEY: ${{ secrets.JRELEASER_GPG_SECRET_KEY }}
           JRELEASER_GPG_PUBLIC_KEY: ${{ secrets.JRELEASER_GPG_PUBLIC_KEY }}
           JRELEASER_GITHUB_TOKEN: ${{ github.token }}
-        run: ./gradlew jreleaserDeploy --stacktrace
+        run: ./gradlew jreleaserFullRelease --stacktrace
