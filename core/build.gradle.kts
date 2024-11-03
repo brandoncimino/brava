@@ -81,7 +81,7 @@ tasks.javadoc {
 
 publishing {
     publications {
-        create<MavenPublication>("Maven") {
+        withType<MavenPublication> {
             from(components["java"])
             groupId = mavenGroupId
             artifactId = mavenArtifactId
@@ -89,9 +89,6 @@ publishing {
             // That may or may not actually refer to the `pom` object below...
             // Either way, there is no `url` property here, so...I guess I won't set it 🤷‍♀️
             description = mavenDescription
-            // Smushing the "create" and "withType" thingies together, 'cus they seem similar  
-//        }
-//        withType<MavenPublication> {
             // This looks to basically be a 1:1 representation of a maven `pom.xml` file, but using Kotlin object initializers. 
             pom {
                 packaging = "jar"
