@@ -11,6 +11,12 @@ jobs:
         with:
           java-version: '21'
           distribution: 'adopt'
+          cache: gradle
+      #          server-id: 'central'
+      #          server-username: ${{ secrets.JRELEASER_MAVENCENTRAL_USERNAME }}
+      #          server-password: ${{ secrets.JRELEASER_MAVENCENTRAL_TOKEN }}
+      #          gpg-private-key: ${{ secrets.JRELEASER_GPG_SECRET_KEY }}
+      #          gpg-passphrase: ${{ secrets.JRELEASER_GPG_PASSPHRASE }}
       - name: Run chmod to make gradlew executable
         run: chmod +x ./gradlew
       - name: Publish package to local staging directory
@@ -20,9 +26,8 @@ jobs:
           JRELEASER_GPG_PASSPHRASE: ${{ secrets.JRELEASER_GPG_PASSPHRASE }}
           JRELEASER_GPG_SECRET_KEY: ${{ secrets.JRELEASER_GPG_SECRET_KEY }}
           JRELEASER_GPG_PUBLIC_KEY: ${{ secrets.JRELEASER_GPG_PUBLIC_KEY }}
-          #          TODO: I suspect this isn't used anywhere
-          #JRELEASER_GITHUB_TOKEN: ${{ github.token }}
-          JRELEASER_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # This used by JReleaser to create a Github release, I believe
+          JRELEASER_GITHUB_TOKEN: ${{ github.token }}
           JRELEASER_MAVENCENTRAL_USERNAME: ${{ secrets.JRELEASER_MAVENCENTRAL_USERNAME }}
           JRELEASER_MAVENCENTRAL_TOKEN: ${{ secrets.JRELEASER_MAVENCENTRAL_TOKEN }}
         run: ./gradlew jreleaserFullRelease --stacktrace
