@@ -132,6 +132,7 @@ publishing {
 jreleaser {
     gitRootSearch = true
     project.copyright = "Brandon Cimino"
+    dryrun = false
     signing {
         active = org.jreleaser.model.Active.ALWAYS
         armored = true
