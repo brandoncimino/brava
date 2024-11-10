@@ -25,7 +25,6 @@ val githubProject = "https://github.com/$githubUsername/brava"
 
 group = "brava"
 version = "1.0-SNAPSHOT"
-project.
 
 repositories {
     mavenCentral()
