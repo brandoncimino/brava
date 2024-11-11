@@ -26,9 +26,9 @@ final def githubProject = "https://github.com/$githubUsername/brava"
 group = "brava"
 version = "1.0-SNAPSHOT"
 
-//repositories {
-//    mavenCentral()
-//}
+repositories {
+    mavenCentral()
+}
 
 java {
     withJavadocJar()
