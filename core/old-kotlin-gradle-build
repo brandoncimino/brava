@@ -111,7 +111,7 @@ publishing {
                     }
                 }
                 scm {
-                    connection = "scm:git:git://github.com/brandoncimino/brava.git"
+                    connection = "scm:git:https://github.com/brandoncimino/brava.git"
                     developerConnection = "scm:git:ssh:git@github.com:brandoncimino/brava.git"
                     url = githubProject
                 }
